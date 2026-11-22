@@ -137,12 +137,11 @@ textarea{min-height:60px;resize:vertical}
 <script>
 /* ================= CONFIG ================= */
 const CONFIG = {
-  SHEET_URL: 'https://script.google.com/macros/s/AKfycbyvIN7uWM9CySTVH0IM-0MetZCdsvphZ2k20EkbJ-vVYErk4LyvNd6bHDfEKak6Gk1IvA/exec',        // paste your Apps Script Web App URL (ends with /exec)
-  SHEET_TOKEN: 'rz-a1rg-7Kq92xPmL4vT',      // must match TOKEN in the Apps Script
-  AUTO_PUSH: true,      // push to Sheet ~1s after every edit
-  POLL_SECONDS: 0       // >0 = also pull from Sheet every N seconds
-};
-const ROUND_NAMES = ['Round 1','Round 2','Round 3','Round 4','Round 5','Semifinals','Finals'];
+  SHEET_URL: 'https://script.google.com/macros/s/AKfycbytp-G4hNnHG3GbWd39-muyyHl4Jdad81XLyjZCkfvZVdQgPHEyvOxUW4V_MWOnVQdzHA/exec',
+  SHEET_TOKEN: 'a1rg-Rz7Kq92xPmL4vT',
+  AUTO_PUSH: true,
+  POLL_SECONDS: 0
+};const ROUND_NAMES = ['Round 1','Round 2','Round 3','Round 4','Round 5','Semifinals','Finals'];
 const STATUS = {scheduled:'Scheduled',live:'Live',completed:'Completed',wo:'Walkover',postponed:'Postponed'};
 
 /* ================= DATA (from the PDF) ================= */
