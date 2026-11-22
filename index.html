@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TDM · A1RG Community Stars — Bracket</title>
+<style>
+:root{--ink:#101828;--mute:#667085;--line:#e4e7ec;--soft:#f9fafb;--brand:#4f46e5;--ok:#12b76a;--live:#f04438;--warn:#f79009}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:#fff;color:var(--ink);font:14px/1.4 Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column}
+button,input,select,textarea{font:inherit;color:inherit}
+button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 11px;cursor:pointer}
+button:hover{background:var(--soft)}
+button.pri{background:var(--brand);border-color:var(--brand);color:#fff}
+button.pri:hover{background:#4338ca}
+button.ghost{color:var(--mute)}
+input,select,textarea{border:1px solid var(--line);border-radius:8px;padding:6px 9px;background:#fff;min-width:0}
+input:focus,select:focus,textarea:focus{outline:2px solid #c7d2fe;border-color:var(--brand)}
+header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px 20px;border-bottom:1px solid var(--line);background:#fff}
+h1{font-size:17px;margin:0}
+.sub{color:var(--mute);font-size:12px;display:block}
+.grow{flex:1}
+.tabs{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.tabs button{border:0;border-radius:0}
+.tabs button.on{background:var(--ink);color:#fff}
+.zoom{display:flex;align-items:center;gap:6px}
+.zoom span{min-width:42px;text-align:center;color:var(--mute);font-size:12px}
+.sync{font-size:12px;color:var(--mute);display:flex;align-items:center;gap:6px}
+.sync:before{content:"";width:8px;height:8px;border-radius:50%;background:#d0d5dd}
+.sync.ok:before{background:var(--ok)}.sync.busy:before{background:var(--warn)}.sync.err:before{background:var(--live)}
+#chips{display:flex;gap:8px;padding:10px 20px;border-bottom:1px solid var(--line);overflow:auto}
+#chips button{white-space:nowrap;border-radius:99px}
+#chips small{color:var(--mute);margin-left:6px}
+main{flex:1;min-height:0;display:flex;flex-direction:column}
+#scroll,#tableView{flex:1;min-height:0;overflow:auto;background:#fff}
+#sizer{position:relative}
+#stage{position:absolute;left:0;top:0;transform-origin:0 0}
+#heads{position:sticky;top:0;height:44px;background:#fff;z-index:5;border-bottom:1px solid var(--line)}
+.rh{position:absolute;top:0;height:44px;width:250px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:700}
+.rh small{font-weight:400;color:var(--mute);font-size:11px}
+/* match card */
+.card{position:absolute;width:250px;height:96px;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 1px 2px rgba(16,24,40,.06);cursor:pointer;overflow:hidden;transition:box-shadow .15s,border-color .15s,opacity .15s}
+.card:hover{border-color:var(--brand);box-shadow:0 4px 14px rgba(79,70,229,.18)}
+.card.live{border-color:var(--live)}
+.card.dim{opacity:.22}
+.card.hit{border-color:var(--brand);box-shadow:0 0 0 3px #c7d2fe}
+.ch{height:21px;display:flex;justify-content:space-between;align-items:center;padding:0 8px;background:var(--soft);border-bottom:1px solid var(--line);font-size:11px;font-weight:600;color:var(--mute)}
+.chip{font-weight:600;font-size:10px;padding:1px 7px;border-radius:99px;background:#f2f4f7;color:var(--mute)}
+.chip.live{background:#fef3f2;color:var(--live)}
+.chip.completed{background:#ecfdf3;color:#027a48}
+.chip.wo,.chip.postponed{background:#fffaeb;color:#b54708}
+.tm{height:25px;display:flex;align-items:center;gap:6px;padding:0 8px;font-size:12.5px}
+.tm+.tm{border-top:1px solid #f2f4f7}
+.seed{min-width:24px;text-align:center;font-size:10.5px;color:var(--mute);background:#f2f4f7;border-radius:4px;line-height:16px}
+.nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nm i{color:#98a2b3}
+.sc{min-width:18px;text-align:right}
+.tm.win{background:#ecfdf3;font-weight:600}
+.tm.lose{color:#98a2b3}
+.cf{height:22px;border-top:1px solid var(--line);display:flex;align-items:center;padding:0 8px;font-size:11px;color:var(--mute);white-space:nowrap}
+.cf i{color:#98a2b3}
+svg path{fill:none;stroke:#d0d5dd;stroke-width:1.5}
+svg path.done{stroke:var(--ok)}
+/* table view */
+.tools{display:flex;gap:10px;align-items:center;padding:10px 20px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{position:sticky;top:0;background:var(--soft);text-align:left;padding:8px;border-bottom:1px solid var(--line);font-size:12px;color:var(--mute);z-index:2}
+td{padding:4px 6px;border-bottom:1px solid #f2f4f7;white-space:nowrap}
+td input,td select{width:100%;border-color:transparent;background:transparent}
+td input:hover,td select:hover{border-color:var(--line)}
+td input.s{width:64px}
+td.der{color:var(--mute);padding-left:14px}
+/* dialogs */
+dialog{border:1px solid var(--line);border-radius:14px;padding:20px;width:min(520px,94vw);box-shadow:0 20px 50px rgba(16,24,40,.2)}
+dialog::backdrop{background:rgba(16,24,40,.35)}
+dialog h2{margin:0 0 14px;font-size:16px}
+.trow{display:grid;grid-template-columns:52px 1fr 70px 70px;gap:8px;align-items:center;margin-bottom:8px}
+.lab{font-weight:600;color:var(--mute);font-size:12px}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
+label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--mute)}
+label input,label select,label textarea{color:var(--ink);font-size:14px}
+textarea{min-height:60px;resize:vertical}
+.act{display:flex;gap:8px;margin-top:14px;align-items:center}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:9px 16px;border-radius:10px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:99}
+#toast.on{opacity:1}
+</style>
+</head>
+<body>
+
+<header>
+  <div><h1>TDM · A1RG Community Stars</h1><span class="sub">Click any match to edit</span></div>
+  <div class="tabs"><button id="tabB" class="on">Bracket</button><button id="tabT">Table</button></div>
+  <input id="q" type="search" placeholder="Find a team…">
+  <div class="zoom" id="zoomBox"><button id="zo">−</button><span id="zv">100%</span><button id="zi">+</button></div>
+  <span class="grow"></span>
+  <span id="sync" class="sync">Local only</span>
+  <button id="bPull">Pull</button><button id="bPush">Push</button>
+  <button id="bBulk">Bulk schedule</button><button id="bCsv">CSV</button><button id="bReset" class="ghost">Reset</button>
+</header>
+<div id="chips"></div>
+
+<main>
+  <div id="scroll"><div id="sizer"><div id="stage"></div></div></div>
+  <div id="tableView" hidden>
+    <div class="tools"><label style="flex-direction:row;align-items:center;gap:8px">Round <select id="rf"></select></label></div>
+    <table>
+      <thead><tr><th>#</th><th>Round</th><th>Team A</th><th>Score</th><th>Score</th><th>Team B</th><th>Winner</th><th>Date</th><th>Start time</th><th>Status</th><th>Notes</th></tr></thead>
+      <tbody id="tb"></tbody>
+    </table>
+  </div>
+</main>
+
+<dialog id="dlg">
+  <form id="edForm">
+    <h2 id="edTitle"></h2>
+    <div class="trow"><span class="lab">Team A</span><input id="eAname" placeholder="Team name"><input id="eAseed" placeholder="Seed"><input id="eAscore" type="number" placeholder="Score"></div>
+    <div class="trow"><span class="lab">Team B</span><input id="eBname" placeholder="Team name"><input id="eBseed" placeholder="Seed"><input id="eBscore" type="number" placeholder="Score"></div>
+    <div class="frow"><label>Date<input id="eDate" type="date"></label><label>Start time<input id="eTime" type="time"></label></div>
+    <div class="frow"><label>Status<select id="eStatus"></select></label><label>Winner<select id="eWin"></select></label></div>
+    <label>Notes (lobby ID, stream link, remarks)<textarea id="eNotes"></textarea></label>
+    <div class="act"><button type="button" id="eClear" class="ghost">Clear result</button><span class="grow"></span><button type="button" id="eCancel">Cancel</button><button class="pri" type="submit">Save</button></div>
+  </form>
+</dialog>
+
+<dialog id="bulk">
+  <h2>Bulk schedule</h2>
+  <div class="frow"><label>Round<select id="bkRound"></select></label><label>Matches per time slot<input id="bkPer" type="number" min="1" value="5"></label></div>
+  <div class="frow"><label>From match #<input id="bkFrom" type="number" placeholder="first"></label><label>To match #<input id="bkTo" type="number" placeholder="last"></label></div>
+  <div class="frow"><label>Date<input id="bkDate" type="date"></label><label>First start time<input id="bkTime" type="time" value="19:00"></label></div>
+  <div class="frow"><label>Minutes between slots<input id="bkGap" type="number" value="20"></label><span></span></div>
+  <div class="act"><span class="grow"></span><button id="bkCancel">Cancel</button><button id="bkGo" class="pri">Apply</button></div>
+</dialog>
+<div id="toast"></div>
+
+<script>
+/* ================= CONFIG ================= */
+const CONFIG = {
+  SHEET_URL: '',        // paste your Apps Script Web App URL (ends with /exec)
+  SHEET_TOKEN: '',      // must match TOKEN in the Apps Script
+  AUTO_PUSH: true,      // push to Sheet ~1s after every edit
+  POLL_SECONDS: 0       // >0 = also pull from Sheet every N seconds
+};
+const ROUND_NAMES = ['Round 1','Round 2','Round 3','Round 4','Round 5','Semifinals','Finals'];
+const STATUS = {scheduled:'Scheduled',live:'Live',completed:'Completed',wo:'Walkover',postponed:'Postponed'};
+
+/* ================= DATA (from the PDF) ================= */
+// Round 1: [teamA, seedA, teamB, seedB]  -> match # 1..51
+const R1 = [
+['XT ESPORTS',64,'MRG OFFICIAL',65],['BLOODLINE BROS',32,'KARNYX ESPORTS',97],['XENITH NOVA',33,'EXOTIC ESPORTS',96],
+['DeadLiest eSports',16,'TLS ESPORTS',113],['NIGHTMARE OFFICIAL',49,'Team Mercenaries Esports',80],['LAGxKB ESPORTS',17,'ZORX ACADEMY',112],
+['CS6 ESPORTS',48,'RAISING HELL',81],['MFG SPORTS',57,'2DESOPRTS',72],['CROWN BD',25,'Team Shadow Monarch',104],
+['ZORX OFFICIAL',40,'MD HABIBUR RAHMAN',89],['TLS REBELS',56,'A9 ESPORTS',73],['OLD SCRATCHES',24,'The dragon boys',105],
+['NEXUS BROTHERS',41,'Terrorzone',88],['ETC ESPORTS',61,'Tempu Stand',68],['4SBxSNAKES DOOMES',29,'CS6 Esports',100],
+['S9 HUB',36,'FLAMExMZES',93],['CHAOS 4',52,'ELITE VELOCITY',77],['BOT OFFICIAL',20,'LDrago Esports',109],
+['ASCENDANT ESPORTS',45,'Tactical Esports',84],['GODS | GANG BADDIES',60,'XO BEAT BOYZ',69],['XPS Esports',28,'FATAL LEGION',101],
+['CATCH22',37,'DP ESPORTS',92],['THUNDER STRIKE LEGIO',53,'OBSIDIAN LEGION',76],['BD16 Esports',21,'TLBxRNS',108],
+['DHAKA ESPORTS',44,'Ikramul Islam Arpon',85],['Nightmare Esports',63,'HOTATATONGKOGANG',66],['STORM ESPORTS',31,'Silent X',98],
+['CH ESPORTS',34,'Team Z',95],['MAN IN BLACK ESPORTS',15,'Team Executors',114],['LAZER ESPORTS',50,'The Boyz',79],
+['TEAM LEGACY',18,'4Bes Ultras',111],['BlazingRaptors',47,'BETA7 Esports',82],['HNT ESPORTS',58,'FOUR NOT FOUR',71],
+['ELECTRIFY',26,'S1 ESPORTS',103],['IM ESPORTS',39,'ASEsports',90],['WARFACE ESPORTS',55,'VICTUS ESPORTS',74],
+['TNC ESPORTS',23,'The Dragon boys',106],['T4 ESPORTS',42,'FxAT7 ESPORTS',87],['Celestial Revenants',62,'Team Infinite Esports',67],
+['AERO ESPORTS',30,'CRD OFFICIAL',99],['TLSx4FP Girls',35,'Team Thunder',94],['1972 ESPORTS',14,'LYNEXxNTG',115],
+['4R ESPORTS',51,'CENTURION',78],['TMS ESPORTS',19,'Raiyan',110],['V4X Esports',46,'ROD ESPORTS',83],
+['CBI ESPORTS',59,'FBI ESPORTS',70],['ASTRAL MUSES',27,'RISING BROTHERHOOD',102],['ROLEX ESPORTS',38,'4MK ESPORTS',91],
+['EUR x Esports',54,'BXSWR ESPORTS',75],['XTREME FOUR',22,'10 TIMES DEADLY',107],['NightFang',43,'Checkmate Esports',86]
+];
+// Round 2: number = winner of that Round-1 match, [seed,name] = team with a bye
+const R2 = [
+[[1,'Terrabyte eSports™'],1],[2,3],[4,5],[6,7],
+[[8,'DELTA ESPORTS'],8],[9,10],[[9,'ABC XEROX'],11],[12,13],
+[[4,'Zenuine Esports'],14],[15,16],[[13,'THUNDERSTORM'],17],[18,19],
+[[5,'DM8xT4 ESPORTS'],20],[21,22],[[12,'ANS ESPORTS'],23],[24,25],
+[[2,'VQxV4L ESPORTS'],26],[27,28],[29,30],[31,32],
+[[7,'Inimical Monk Esports'],33],[34,35],[[10,'R4Fes'],36],[37,38],
+[[3,'VAMOS ESPORTS'],39],[40,41],[42,43],[44,45],
+[[6,'DHAKA x ESPORTS'],46],[47,48],[[11,'1X9 VIPERS ESPORTS'],49],[50,51]
+];
+
+/* ================= MODEL ================= */
+const mk=(id,round,a,b)=>({id,round,a,b,sa:'',sb:'',win:'',date:'',time:'',status:'scheduled',notes:''});
+const slot=s=>typeof s==='number'?{from:s}:{seed:s[0],name:s[1]};
+function build(){
+  const M=[]; let id=0;
+  R1.forEach(r=>M.push(mk(++id,0,{seed:r[1],name:r[0]},{seed:r[3],name:r[2]})));
+  R2.forEach(r=>M.push(mk(++id,1,slot(r[0]),slot(r[1]))));
+  for(let rd=2;rd<7;rd++){
+    const prev=M.filter(m=>m.round===rd-1);
+    for(let i=0;i<prev.length/2;i++) M.push(mk(++id,rd,{from:prev[2*i].id},{from:prev[2*i+1].id}));
+  }
+  return M;
+}
+let M=build();
+const byId=id=>M[id-1];
+const KEY='a1rg_bracket_v1';
+const pick=m=>({id:m.id,an:m.a.from?undefined:m.a.name,sdA:m.a.from?undefined:m.a.seed,bn:m.b.from?undefined:m.b.name,sdB:m.b.from?undefined:m.b.seed,
+  sa:m.sa,sb:m.sb,win:m.win,date:m.date,time:m.time,status:m.status,notes:m.notes});
+function load(){try{JSON.parse(localStorage.getItem(KEY)||'[]').forEach(o=>{const m=byId(o.id);if(!m)return;
+  if(!m.a.from&&o.an!==undefined){m.a.name=o.an;m.a.seed=o.sdA}
+  if(!m.b.from&&o.bn!==undefined){m.b.name=o.bn;m.b.seed=o.sdB}
+  Object.assign(m,{sa:o.sa,sb:o.sb,win:o.win,date:o.date,time:o.time,status:o.status,notes:o.notes});})}catch(e){}}
+load();
+const persist=()=>localStorage.setItem(KEY,JSON.stringify(M.map(pick)));
+function save(){persist();schedulePush()}
+
+function team(sl){ // resolves a slot to {name,seed} or null
+  if(sl.from){const s=byId(sl.from);return s.win?team(s.win==='A'?s.a:s.b):null}
+  return sl.name?{name:sl.name,seed:sl.seed}:null;
+}
+function downstream(id){return M.find(x=>x.a.from===id||x.b.from===id)}
+function clearDown(id){const d=downstream(id);if(d&&d.win){d.win='';clearDown(d.id)}}
+function setWin(m,w){if(m.win===w)return;m.win=w;clearDown(m.id)}
+function autoScores(m){
+  if(m.sa===''||m.sb===''||m.sa==null||m.sb==null)return;
+  const x=+m.sa,y=+m.sb; if(isNaN(x)||isNaN(y)||x===y)return;
+  setWin(m,x>y?'A':'B'); if(m.status!=='wo')m.status='completed';
+}
+
+/* ================= FORMATTERS ================= */
+const pad=n=>String(n).padStart(2,'0');
+const s=v=>v==null?'':String(v).trim();
+const esc=v=>String(v==null?'':v).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmtDate=iso=>{if(!iso)return'';const[y,m,d]=iso.split('-');return`${d}-${m}-${y}`};
+function parseDate(v){v=s(v);if(!v)return'';let m=v.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})$/);if(m)return`${m[3]}-${pad(m[2])}-${pad(m[1])}`;m=v.match(/^(\d{4})-(\d{2})-(\d{2})/);return m?`${m[1]}-${m[2]}-${m[3]}`:''}
+const fmtTime=t=>{if(!t)return'';let[h,m]=t.split(':').map(Number);const ap=h>=12?'PM':'AM';h=h%12||12;return`${h}:${pad(m)} ${ap}`};
+function parseTime(v){v=s(v);if(!v)return'';const m=v.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*([AaPp][Mm])?$/);if(!m)return'';let h=+m[1];if(m[3])h=h%12+(m[3].toLowerCase()==='pm'?12:0);return`${pad(h)}:${m[2]}`}
+const addDays=(d,n)=>{const t=new Date(d+'T00:00:00Z');t.setUTCDate(t.getUTCDate()+n);return t.toISOString().slice(0,10)};
+const $=q=>document.querySelector(q);
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),2500)}
+
+/* ================= BRACKET RENDER ================= */
+const CW=250,CH=96,GAP=14,CG=70,ROW=CH+GAP,HEAD=44,PAD=24;
+let zoom=1;
+const colX=r=>PAD+r*(CW+CG);
+
+function layout(){
+  const pos={};let cur=0;
+  M.filter(m=>m.round===1).forEach(m=>{
+    const f=[m.a,m.b].filter(x=>x.from).map(x=>x.from);
+    if(f.length===2){pos[f[0]]=cur+ROW/2;pos[f[1]]=cur+ROW*1.5;pos[m.id]=cur+ROW;cur+=ROW*2}
+    else{pos[f[0]]=cur+ROW/2;pos[m.id]=cur+ROW/2;cur+=ROW}
+  });
+  for(let r=2;r<7;r++)M.filter(m=>m.round===r).forEach(m=>{pos[m.id]=(pos[m.a.from]+pos[m.b.from])/2});
+  return{pos,height:cur};
+}
+function row(t,score,win,lose,sl){
+  const label=t?esc(t.name):(sl.from?`<i>Winner of #${sl.from}</i>`:'<i>TBD</i>');
+  return`<div class="tm ${win?'win':''} ${lose?'lose':''}"><span class="seed">${t&&t.seed!==''&&t.seed!=null?esc(t.seed):'–'}</span><span class="nm" title="${t?esc(t.name):''}">${label}</span><b class="sc">${esc(score)}</b></div>`;
+}
+function renderBracket(){
+  const{pos,height}=layout();
+  const W=colX(6)+CW+PAD,H=HEAD+height+PAD;
+  const q=$('#q').value.trim().toLowerCase();
+  const cy=id=>HEAD+pos[id];
+  let paths='',cards='',heads='';
+  ROUND_NAMES.forEach((n,i)=>{heads+=`<div class="rh" style="left:${colX(i)}px">${n}<small>${M.filter(m=>m.round===i).length} match${i===6?'':'es'}</small></div>`});
+  M.forEach(m=>{
+    [m.a,m.b].forEach(sl=>{if(!sl.from)return;const src=byId(sl.from);
+      const sx=colX(src.round)+CW,sy=cy(src.id),tx=colX(m.round),ty=cy(m.id),mx=sx+CG/2;
+      paths+=`<path class="${src.win?'done':''}" d="M${sx} ${sy}H${mx}V${ty}H${tx}"/>`});
+    const A=team(m.a),B=team(m.b);
+    const names=((A?A.name:'')+' '+(B?B.name:'')).toLowerCase();
+    const cls=q?(names.includes(q)?'hit':'dim'):'';
+    const when=(m.date||m.time)?`${fmtDate(m.date)||'<i>no date</i>'} · ${fmtTime(m.time)||'<i>no time</i>'}`:'<i>Set date &amp; time</i>';
+    cards+=`<div class="card ${m.status} ${cls}" data-id="${m.id}" style="left:${colX(m.round)}px;top:${cy(m.id)-CH/2}px">
+      <div class="ch"><span>Match ${m.id}</span><span class="chip ${m.status}">${STATUS[m.status]}</span></div>
+      ${row(A,m.sa,m.win==='A',m.win==='B',m.a)}${row(B,m.sb,m.win==='B',m.win==='A',m.b)}
+      <div class="cf">${when}</div></div>`;
+  });
+  $('#stage').style.cssText=`width:${W}px;height:${H}px;transform:scale(${zoom})`;
+  $('#sizer').style.cssText=`width:${W*zoom}px;height:${H*zoom}px`;
+  $('#stage').innerHTML=`<div id="heads" style="width:${W}px">${heads}</div><svg width="${W}" height="${H}" style="position:absolute;left:0;top:0;pointer-events:none">${paths}</svg>${cards}`;
+}
+
+/* ================= EDITOR MODAL ================= */
+let cur=null;
+const dlg=$('#dlg');
+$('#eStatus').innerHTML=Object.entries(STATUS).map(([k,v])=>`<option value="${k}">${v}</option>`).join('');
+function fillWinner(m,val){
+  const A=team(m.a),B=team(m.b);
+  $('#eWin').innerHTML='<option value="">— not decided —</option>'+(A?`<option value="A">${esc(A.name)}</option>`:'')+(B?`<option value="B">${esc(B.name)}</option>`:'');
+  $('#eWin').value=val||'';
+}
+function openEdit(id){
+  cur=byId(id);const m=cur;
+  $('#edTitle').textContent=`Match ${m.id} · ${ROUND_NAMES[m.round]}`;
+  [['A',m.a,m.sa],['B',m.b,m.sb]].forEach(([k,sl,sc])=>{
+    const t=team(sl),n=$('#e'+k+'name'),sd=$('#e'+k+'seed');
+    n.disabled=sd.disabled=!!sl.from;
+    n.value=sl.from?(t?t.name:`Winner of #${sl.from}`):sl.name;
+    sd.value=sl.from?(t&&t.seed!=null?t.seed:''):(sl.seed==null?'':sl.seed);
+    $('#e'+k+'score').value=sc;
+  });
+  $('#eDate').value=m.date;$('#eTime').value=m.time;$('#eStatus').value=m.status;$('#eNotes').value=m.notes;
+  fillWinner(m,m.win);
+  dlg.showModal();
+}
+['#eAscore','#eBscore'].forEach(id=>$(id).addEventListener('input',()=>{
+  const a=$('#eAscore').value,b=$('#eBscore').value;
+  if(a===''||b===''||+a===+b)return;
+  $('#eWin').value=+a>+b?'A':'B'; if($('#eStatus').value!=='wo')$('#eStatus').value='completed';
+}));
+$('#eClear').onclick=()=>{$('#eAscore').value='';$('#eBscore').value='';$('#eWin').value='';$('#eStatus').value='scheduled'};
+$('#eCancel').onclick=()=>dlg.close();
+$('#edForm').onsubmit=e=>{
+  e.preventDefault();const m=cur;
+  if(!m.a.from){m.a.name=$('#eAname').value.trim();m.a.seed=$('#eAseed').value.trim()}
+  if(!m.b.from){m.b.name=$('#eBname').value.trim();m.b.seed=$('#eBseed').value.trim()}
+  m.sa=$('#eAscore').value;m.sb=$('#eBscore').value;m.date=$('#eDate').value;m.time=$('#eTime').value;
+  m.status=$('#eStatus').value;m.notes=$('#eNotes').value;
+  setWin(m,$('#eWin').value);
+  dlg.close();save();renderAll();
+};
+$('#stage').addEventListener('click',e=>{const c=e.target.closest('.card');if(c)openEdit(+c.dataset.id)});
+
+/* ================= TABLE VIEW ================= */
+$('#rf').innerHTML='<option value="all">All rounds</option>'+ROUND_NAMES.map((n,i)=>`<option value="${i}">${n}</option>`).join('');
+$('#rf').onchange=renderTable;
+function renderTable(){
+  const rf=$('#rf').value;
+  $('#tb').innerHTML=M.filter(m=>rf==='all'||m.round==rf).map(m=>{
+    const A=team(m.a),B=team(m.b);
+    const nameCell=(sl,t,f)=>sl.from?`<td class="der">${t?esc(t.name):'Winner of #'+sl.from}</td>`:`<td><input data-id="${m.id}" data-f="${f}" value="${esc(sl.name)}"></td>`;
+    const st=Object.entries(STATUS).map(([k,v])=>`<option value="${k}" ${m.status===k?'selected':''}>${v}</option>`).join('');
+    const wn=`<option value="">—</option>${A?`<option value="A" ${m.win==='A'?'selected':''}>${esc(A.name)}</option>`:''}${B?`<option value="B" ${m.win==='B'?'selected':''}>${esc(B.name)}</option>`:''}`;
+    return`<tr><td>${m.id}</td><td>${ROUND_NAMES[m.round]}</td>${nameCell(m.a,A,'an')}
+      <td><input class="s" type="number" data-id="${m.id}" data-f="sa" value="${esc(m.sa)}"></td>
+      <td><input class="s" type="number" data-id="${m.id}" data-f="sb" value="${esc(m.sb)}"></td>
+      ${nameCell(m.b,B,'bn')}
+      <td><select data-id="${m.id}" data-f="win">${wn}</select></td>
+      <td><input type="date" data-id="${m.id}" data-f="date" value="${m.date}"></td>
+      <td><input type="time" data-id="${m.id}" data-f="time" value="${m.time}"></td>
+      <td><select data-id="${m.id}" data-f="status">${st}</select></td>
+      <td><input data-id="${m.id}" data-f="notes" value="${esc(m.notes)}"></td></tr>`;
+  }).join('');
+}
+$('#tb').addEventListener('change',e=>{
+  const t=e.target,f=t.dataset.f;if(!f)return;const m=byId(+t.dataset.id),v=t.value;
+  if(f==='an')m.a.name=v.trim();else if(f==='bn')m.b.name=v.trim();
+  else if(f==='sa'||f==='sb'){m[f]=v;autoScores(m)}
+  else if(f==='win')setWin(m,v);
+  else m[f]=v;
+  save();renderTable();
+});
+
+/* ================= VIEWS / TOOLBAR ================= */
+let view='b';
+function renderAll(){view==='b'?renderBracket():renderTable()}
+function setView(v){
+  view=v;$('#scroll').hidden=v!=='b';$('#tableView').hidden=v==='b';$('#zoomBox').hidden=v!=='b';
+  $('#tabB').classList.toggle('on',v==='b');$('#tabT').classList.toggle('on',v!=='b');renderAll();
+}
+$('#tabB').onclick=()=>setView('b');$('#tabT').onclick=()=>setView('t');
+function setZoom(z){zoom=Math.min(1.2,Math.max(.4,z));$('#zv').textContent=Math.round(zoom*100)+'%';renderBracket()}
+$('#zo').onclick=()=>setZoom(zoom-.1);$('#zi').onclick=()=>setZoom(zoom+.1);
+let qT;$('#q').addEventListener('input',()=>{clearTimeout(qT);qT=setTimeout(()=>{if(view==='b')renderBracket()},150)});
+$('#q').addEventListener('keydown',e=>{if(e.key==='Enter'){const h=document.querySelector('.card.hit');if(h)h.scrollIntoView({block:'center',inline:'center',behavior:'smooth'})}});
+$('#chips').innerHTML=ROUND_NAMES.map((n,i)=>`<button data-r="${i}">${n}<small>${M.filter(m=>m.round===i).length}</small></button>`).join('');
+$('#chips').onclick=e=>{const b=e.target.closest('button');if(!b)return;const i=+b.dataset.r;
+  if(view==='b')$('#scroll').scrollTo({left:(colX(i)-20)*zoom,behavior:'smooth'});else{$('#rf').value=i;renderTable()}};
+
+/* bulk schedule */
+$('#bkRound').innerHTML=ROUND_NAMES.map((n,i)=>`<option value="${i}">${n}</option>`).join('');
+$('#bBulk').onclick=()=>$('#bulk').showModal();
+$('#bkCancel').onclick=()=>$('#bulk').close();
+$('#bkGo').onclick=()=>{
+  const r=+$('#bkRound').value,from=+$('#bkFrom').value||1,to=+$('#bkTo').value||999,per=Math.max(1,+$('#bkPer').value||1),gap=+$('#bkGap').value||0,d=$('#bkDate').value,t=$('#bkTime').value;
+  if(!d||!t){toast('Pick a date and first start time');return}
+  const[h0,m0]=t.split(':').map(Number);
+  M.filter(m=>m.round===r&&m.id>=from&&m.id<=to).forEach((m,i)=>{
+    const tot=h0*60+m0+Math.floor(i/per)*gap,mins=tot%1440;
+    m.date=tot>=1440?addDays(d,Math.floor(tot/1440)):d;m.time=pad(Math.floor(mins/60))+':'+pad(mins%60);
+  });
+  $('#bulk').close();save();renderAll();toast('Schedule applied');
+};
+
+/* export / reset */
+function toRows(){return M.map(m=>{
+  const A=team(m.a),B=team(m.b),w=m.win==='A'?A:m.win==='B'?B:null;
+  return{match_no:m.id,round:ROUND_NAMES[m.round],
+    team_a:A?A.name:(m.a.from?`Winner of #${m.a.from}`:''),seed_a:A&&A.seed!=null?A.seed:'',score_a:m.sa,
+    team_b:B?B.name:(m.b.from?`Winner of #${m.b.from}`:''),seed_b:B&&B.seed!=null?B.seed:'',score_b:m.sb,
+    winner:w?w.name:'',date:fmtDate(m.date),start_time:fmtTime(m.time),status:STATUS[m.status],notes:m.notes};
+})}
+$('#bCsv').onclick=()=>{
+  const rows=toRows(),H=Object.keys(rows[0]),q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+  const csv=[H.join(',')].concat(rows.map(r=>H.map(k=>q(r[k])).join(','))).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='a1rg-bracket.csv';a.click();
+};
+$('#bReset').onclick=()=>{if(confirm('Reset ALL matches (teams, scores, dates) to the original PDF data?')){localStorage.removeItem(KEY);M=build();save();renderAll()}};
+
+/* ================= GOOGLE SHEET SYNC ================= */
+let pushT=null,suppress=false;
+function setSync(st,msg){const e=$('#sync');e.className='sync '+(st||'');
+  e.textContent=msg||({ok:'Synced '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}),busy:'Syncing…',err:'Sync error'}[st]||'Local only')}
+function schedulePush(){if(!CONFIG.SHEET_URL||!CONFIG.AUTO_PUSH||suppress)return;clearTimeout(pushT);setSync('busy','Unsynced changes…');pushT=setTimeout(push,1200)}
+async function push(){
+  if(!CONFIG.SHEET_URL){toast('Add SHEET_URL in CONFIG first');return}
+  clearTimeout(pushT);pushT=null;setSync('busy');
+  try{const r=await fetch(CONFIG.SHEET_URL,{method:'POST',body:JSON.stringify({token:CONFIG.SHEET_TOKEN,rows:toRows()})});
+    const j=await r.json();if(j.error)throw new Error(j.error);setSync('ok')}
+  catch(e){setSync('err','Sync error: '+e.message)}
+}
+function applyRows(rows){
+  rows.slice().sort((p,q)=>p.match_no-q.match_no).forEach(r=>{
+    const m=byId(+r.match_no);if(!m)return;
+    if(!m.a.from&&r.team_a!=null){m.a.name=s(r.team_a);m.a.seed=s(r.seed_a)}
+    if(!m.b.from&&r.team_b!=null){m.b.name=s(r.team_b);m.b.seed=s(r.seed_b)}
+    m.sa=s(r.score_a);m.sb=s(r.score_b);m.date=parseDate(r.date);m.time=parseTime(r.start_time);m.notes=s(r.notes);
+    m.status=Object.keys(STATUS).find(k=>STATUS[k].toLowerCase()===s(r.status).toLowerCase())||'scheduled';
+    const w=s(r.winner).toLowerCase(),A=team(m.a),B=team(m.b);
+    m.win=w&&A&&A.name.toLowerCase()===w?'A':w&&B&&B.name.toLowerCase()===w?'B':'';
+  });
+}
+async function pull(quiet){
+  if(!CONFIG.SHEET_URL){toast('Add SHEET_URL in CONFIG first');return false}
+  setSync('busy');
+  try{const r=await fetch(CONFIG.SHEET_URL+'?token='+encodeURIComponent(CONFIG.SHEET_TOKEN));
+    const j=await r.json();if(j.error)throw new Error(j.error);
+    if(!j.rows||!j.rows.length){setSync('ok');if(!quiet)toast('Sheet is empty');return false}
+    applyRows(j.rows);persist();renderAll();setSync('ok');if(!quiet)toast('Pulled from Sheet');return true}
+  catch(e){setSync('err','Sync error: '+e.message);return false}
+}
+$('#bPush').onclick=push;$('#bPull').onclick=()=>pull(false);
+
+/* ================= START ================= */
+renderBracket();
+if(CONFIG.SHEET_URL){
+  pull(true).then(ok=>{if(!ok)push()});   // empty sheet on first connect -> uploads everything
+  if(CONFIG.POLL_SECONDS>0)setInterval(()=>{if(!pushT&&!dlg.open)pull(true)},CONFIG.POLL_SECONDS*1000);
+}
+</script>
+</body>
+</html>
