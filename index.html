@@ -138,7 +138,7 @@ textarea{min-height:60px;resize:vertical}
 <script>
 /* ================= CONFIG ================= */
 const CONFIG = {
-  SHEET_URL: 'https://script.google.com/macros/s/AKfycbyTcqaq12xP3KxmmikO-hAyWainI3wp5InQNky1Mp1LisFs-o2j3kUsEljdxovDYe2iEA/exec',
+  SHEET_URL: 'https://script.google.com/macros/s/AKfycbxaWyrtLIqhdFzn13aIOgUQfx158ot_61HOamXl3j2FhJE2Wb4287z3KCpa3EVvdJywxw/exec',
   SHEET_TOKEN: 'a1rg-Rz7Kq92xPmL4vT',
   AUTO_PUSH: true,
   POLL_SECONDS: 0
@@ -384,6 +384,16 @@ function toRows(){return M.map(m=>{
     team_b:B?B.name:(m.b.from?`Winner of #${m.b.from}`:''),seed_b:B&&B.seed!=null?B.seed:'',score_b:m.sb,
     winner:w?w.name:'',date:fmtDate(m.date),start_time:fmtTime(m.time),status:STATUS[m.status],notes:m.notes};
 })}
+// layout of the visual bracket, drawn into the "Bracket" tab of the Sheet
+function bracketPayload(){
+  const{pos}=layout();
+  return{rounds:ROUND_NAMES,matches:M.map(m=>{
+    const A=team(m.a),B=team(m.b);
+    return{id:m.id,round:m.round,cr:Math.floor(6*pos[m.id]/ROW-1+1e-6),
+      a:A?A.name:(m.a.from?`Winner of #${m.a.from}`:''),b:B?B.name:(m.b.from?`Winner of #${m.b.from}`:''),
+      sa:m.sa,sb:m.sb,date:fmtDate(m.date),time:fmtTime(m.time),win:m.win,from:[m.a.from||0,m.b.from||0]};
+  })};
+}
 $('#bCsv').onclick=()=>{
   const rows=toRows(),H=Object.keys(rows[0]),q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
   const csv=[H.join(',')].concat(rows.map(r=>H.map(k=>q(r[k])).join(','))).join('\n');
@@ -427,8 +437,8 @@ async function push(manual){
   if(!CONFIG.SHEET_URL){toast('Add SHEET_URL in CONFIG first');return}
   clearTimeout(pushT);pushT=null;setSync('busy');
   try{
-    const j=await callSheet({method:'POST',body:JSON.stringify({token:CONFIG.SHEET_TOKEN,rows:toRows()})});
-    lastErr='';setSync('ok');if(manual)toast('Pushed '+(j.count||'')+' matches to Sheet');
+    const j=await callSheet({method:'POST',body:JSON.stringify({token:CONFIG.SHEET_TOKEN,rows:toRows(),bracket:bracketPayload()})});
+    lastErr='';setSync('ok');if(manual)toast('Pushed '+(j.count||'')+' matches + bracket to Sheet');
   }catch(e){fail(e)}
 }
 function applyRows(rows){
@@ -450,7 +460,10 @@ async function pull(manual){
     const j=await callSheet({cache:'no-store'},'?token='+encodeURIComponent(CONFIG.SHEET_TOKEN)+'&t='+Date.now());
     lastErr='';
     if(!j.rows||!j.rows.length){setSync('ok');if(manual)toast('Sheet is empty — use Push to upload');return false}
-    applyRows(j.rows);persist();renderAll();setSync('ok');if(manual)toast('Pulled from Sheet');return true;
+    applyRows(j.rows);persist();renderAll();setSync('ok');
+    if(manual)toast(j.source==='bracket'?'Pulled edits from the Bracket tab':'Pulled from Sheet');
+    if(j.source==='bracket')push(false);   // refresh both tabs so they match again
+    return true;
   }catch(e){fail(e);return null}
 }
 $('#bPush').onclick=()=>push(true);
