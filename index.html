@@ -27,9 +27,10 @@ h1{font-size:17px;margin:0}
 .tabs button.on{background:var(--ink);color:#fff}
 .zoom{display:flex;align-items:center;gap:6px}
 .zoom span{min-width:42px;text-align:center;color:var(--mute);font-size:12px}
-.sync{font-size:12px;color:var(--mute);display:flex;align-items:center;gap:6px}
+.sync{font-size:12px;color:var(--mute);display:flex;align-items:center;gap:6px;cursor:pointer}
 .sync:before{content:"";width:8px;height:8px;border-radius:50%;background:#d0d5dd}
 .sync.ok:before{background:var(--ok)}.sync.busy:before{background:var(--warn)}.sync.err:before{background:var(--live)}
+.sync.err{color:var(--live)}
 #chips{display:flex;gap:8px;padding:10px 20px;border-bottom:1px solid var(--line);overflow:auto}
 #chips button{white-space:nowrap;border-radius:99px}
 #chips small{color:var(--mute);margin-left:6px}
@@ -83,7 +84,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--mute
 label input,label select,label textarea{color:var(--ink);font-size:14px}
 textarea{min-height:60px;resize:vertical}
 .act{display:flex;gap:8px;margin-top:14px;align-items:center}
-#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:9px 16px;border-radius:10px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:99}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:9px 16px;border-radius:10px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:99;max-width:90vw}
 #toast.on{opacity:1}
 </style>
 </head>
@@ -95,7 +96,7 @@ textarea{min-height:60px;resize:vertical}
   <input id="q" type="search" placeholder="Find a team…">
   <div class="zoom" id="zoomBox"><button id="zo">−</button><span id="zv">100%</span><button id="zi">+</button></div>
   <span class="grow"></span>
-  <span id="sync" class="sync">Local only</span>
+  <span id="sync" class="sync" title="Click for sync details">Local only</span>
   <button id="bPull">Pull</button><button id="bPush">Push</button>
   <button id="bBulk">Bulk schedule</button><button id="bCsv">CSV</button><button id="bReset" class="ghost">Reset</button>
 </header>
@@ -141,7 +142,8 @@ const CONFIG = {
   SHEET_TOKEN: 'a1rg-Rz7Kq92xPmL4vT',
   AUTO_PUSH: true,
   POLL_SECONDS: 0
-};const ROUND_NAMES = ['Round 1','Round 2','Round 3','Round 4','Round 5','Semifinals','Finals'];
+};
+const ROUND_NAMES = ['Round 1','Round 2','Round 3','Round 4','Round 5','Semifinals','Finals'];
 const STATUS = {scheduled:'Scheduled',live:'Live',completed:'Completed',wo:'Walkover',postponed:'Postponed'};
 
 /* ================= DATA (from the PDF) ================= */
@@ -226,7 +228,7 @@ const fmtTime=t=>{if(!t)return'';let[h,m]=t.split(':').map(Number);const ap=h>=1
 function parseTime(v){v=s(v);if(!v)return'';const m=v.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*([AaPp][Mm])?$/);if(!m)return'';let h=+m[1];if(m[3])h=h%12+(m[3].toLowerCase()==='pm'?12:0);return`${pad(h)}:${m[2]}`}
 const addDays=(d,n)=>{const t=new Date(d+'T00:00:00Z');t.setUTCDate(t.getUTCDate()+n);return t.toISOString().slice(0,10)};
 const $=q=>document.querySelector(q);
-function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),2500)}
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),2600)}
 
 /* ================= BRACKET RENDER ================= */
 const CW=250,CH=96,GAP=14,CG=70,ROW=CH+GAP,HEAD=44,PAD=24;
@@ -390,16 +392,44 @@ $('#bCsv').onclick=()=>{
 $('#bReset').onclick=()=>{if(confirm('Reset ALL matches (teams, scores, dates) to the original PDF data?')){localStorage.removeItem(KEY);M=build();save();renderAll()}};
 
 /* ================= GOOGLE SHEET SYNC ================= */
-let pushT=null,suppress=false;
-function setSync(st,msg){const e=$('#sync');e.className='sync '+(st||'');
-  e.textContent=msg||({ok:'Synced '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}),busy:'Syncing…',err:'Sync error'}[st]||'Local only')}
-function schedulePush(){if(!CONFIG.SHEET_URL||!CONFIG.AUTO_PUSH||suppress)return;clearTimeout(pushT);setSync('busy','Unsynced changes…');pushT=setTimeout(push,1200)}
-async function push(){
+let pushT=null,lastErr='';
+function setSync(st,msg){
+  const e=$('#sync');e.className='sync '+(st||'');
+  e.textContent=msg||({ok:'Synced '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),busy:'Syncing…',err:'Sync error – click for details'}[st]||'Local only');
+}
+$('#sync').onclick=()=>{
+  if(lastErr)alert('Sheet sync problem:\n\n'+lastErr);
+  else if(!CONFIG.SHEET_URL)alert('Sheet sync is off. Add SHEET_URL and SHEET_TOKEN in CONFIG.');
+  else toast('Sync is working');
+};
+function fail(e){
+  console.error('[Sheet sync]',e);
+  let m=(e&&e.message)||String(e);
+  if(/Failed to fetch|NetworkError|Load failed/i.test(m))
+    m='Could not reach the Web App ('+m+').\n\nCheck: 1) SHEET_URL is the /exec URL of your latest deployment, 2) Deploy > Manage deployments > "Who has access" = Anyone, 3) you are online.';
+  if(m==='bad token')m='bad token — SHEET_TOKEN in this page must be exactly the same as TOKEN in the Apps Script, and you must redeploy (Manage deployments > pencil > New version) after changing the script.';
+  lastErr=m;setSync('err');
+}
+async function callSheet(opts,query){
+  const r=await fetch(CONFIG.SHEET_URL+(query||''),opts);
+  const txt=await r.text();
+  let j;
+  try{j=JSON.parse(txt)}
+  catch(_){throw new Error('The Sheet script did not return JSON (HTTP '+r.status+'). Usually the Web App access is not "Anyone", the script was not authorized (run setup() once), or you have not redeployed.\n\nResponse started with: '+txt.slice(0,100).replace(/\s+/g,' '))}
+  if(j.error)throw new Error(j.error);
+  return j;
+}
+function schedulePush(){
+  if(!CONFIG.SHEET_URL||!CONFIG.AUTO_PUSH)return;
+  clearTimeout(pushT);setSync('busy','Unsynced changes…');pushT=setTimeout(()=>push(false),1200);
+}
+async function push(manual){
   if(!CONFIG.SHEET_URL){toast('Add SHEET_URL in CONFIG first');return}
   clearTimeout(pushT);pushT=null;setSync('busy');
-  try{const r=await fetch(CONFIG.SHEET_URL,{method:'POST',body:JSON.stringify({token:CONFIG.SHEET_TOKEN,rows:toRows()})});
-    const j=await r.json();if(j.error)throw new Error(j.error);setSync('ok')}
-  catch(e){setSync('err','Sync error: '+e.message)}
+  try{
+    const j=await callSheet({method:'POST',body:JSON.stringify({token:CONFIG.SHEET_TOKEN,rows:toRows()})});
+    lastErr='';setSync('ok');if(manual)toast('Pushed '+(j.count||'')+' matches to Sheet');
+  }catch(e){fail(e)}
 }
 function applyRows(rows){
   rows.slice().sort((p,q)=>p.match_no-q.match_no).forEach(r=>{
@@ -412,22 +442,25 @@ function applyRows(rows){
     m.win=w&&A&&A.name.toLowerCase()===w?'A':w&&B&&B.name.toLowerCase()===w?'B':'';
   });
 }
-async function pull(quiet){
-  if(!CONFIG.SHEET_URL){toast('Add SHEET_URL in CONFIG first');return false}
+// returns true = pulled, false = sheet empty, null = error
+async function pull(manual){
+  if(!CONFIG.SHEET_URL){toast('Add SHEET_URL in CONFIG first');return null}
   setSync('busy');
-  try{const r=await fetch(CONFIG.SHEET_URL+'?token='+encodeURIComponent(CONFIG.SHEET_TOKEN));
-    const j=await r.json();if(j.error)throw new Error(j.error);
-    if(!j.rows||!j.rows.length){setSync('ok');if(!quiet)toast('Sheet is empty');return false}
-    applyRows(j.rows);persist();renderAll();setSync('ok');if(!quiet)toast('Pulled from Sheet');return true}
-  catch(e){setSync('err','Sync error: '+e.message);return false}
+  try{
+    const j=await callSheet({cache:'no-store'},'?token='+encodeURIComponent(CONFIG.SHEET_TOKEN)+'&t='+Date.now());
+    lastErr='';
+    if(!j.rows||!j.rows.length){setSync('ok');if(manual)toast('Sheet is empty — use Push to upload');return false}
+    applyRows(j.rows);persist();renderAll();setSync('ok');if(manual)toast('Pulled from Sheet');return true;
+  }catch(e){fail(e);return null}
 }
-$('#bPush').onclick=push;$('#bPull').onclick=()=>pull(false);
+$('#bPush').onclick=()=>push(true);
+$('#bPull').onclick=()=>pull(true);
 
 /* ================= START ================= */
 renderBracket();
 if(CONFIG.SHEET_URL){
-  pull(true).then(ok=>{if(!ok)push()});   // empty sheet on first connect -> uploads everything
-  if(CONFIG.POLL_SECONDS>0)setInterval(()=>{if(!pushT&&!dlg.open)pull(true)},CONFIG.POLL_SECONDS*1000);
+  pull(false).then(ok=>{if(ok===false)push(false)});   // empty sheet on first connect -> uploads everything
+  if(CONFIG.POLL_SECONDS>0)setInterval(()=>{if(!pushT&&!dlg.open)pull(false)},CONFIG.POLL_SECONDS*1000);
 }
 </script>
 </body>
