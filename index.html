@@ -18,6 +18,7 @@ button.pri:hover{background:#4338ca}
 button.ghost{color:var(--mute)}
 input,select,textarea{border:1px solid var(--line);border-radius:8px;padding:6px 9px;background:#fff;min-width:0}
 input:focus,select:focus,textarea:focus{outline:2px solid #c7d2fe;border-color:var(--brand)}
+input:disabled,select:disabled{background:#f2f4f7;color:#98a2b3}
 header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px 20px;border-bottom:1px solid var(--line);background:#fff}
 h1{font-size:17px;margin:0}
 .sub{color:var(--mute);font-size:12px;display:block}
@@ -30,10 +31,24 @@ h1{font-size:17px;margin:0}
 .sync{font-size:12px;color:var(--mute);display:flex;align-items:center;gap:6px;cursor:pointer}
 .sync:before{content:"";width:8px;height:8px;border-radius:50%;background:#d0d5dd}
 .sync.ok:before{background:var(--ok)}.sync.busy:before{background:var(--warn)}.sync.err:before{background:var(--live)}
+.sync.polling:before{animation:blink 1.6s infinite}
 .sync.err{color:var(--live)}
+@keyframes blink{50%{opacity:.25}}
 #chips{display:flex;gap:8px;padding:10px 20px;border-bottom:1px solid var(--line);overflow:auto}
 #chips button{white-space:nowrap;border-radius:99px}
 #chips small{color:var(--mute);margin-left:6px}
+#stats{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 20px;border-bottom:1px solid var(--line);font-size:12.5px}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:99px;background:#f2f4f7;color:var(--mute);font-weight:600}
+.pill[data-go]{cursor:pointer}
+.pill i{width:8px;height:8px;border-radius:50%;background:#98a2b3}
+.pill.live{background:#fef3f2;color:var(--live)}.pill.live i{background:var(--live);animation:blink 1s infinite}
+.pill.completed{background:#ecfdf3;color:#027a48}.pill.completed i{background:var(--ok)}
+.pill.wo{background:#fffaeb;color:#b54708}.pill.wo i{background:var(--warn)}
+.pill.postponed{background:#f4f3ff;color:#6941c6}.pill.postponed i{background:#9e77ed}
+.pill.bye{background:#eff8ff;color:#175cd3}.pill.bye i{background:#2e90fa}
+.prog{height:6px;border-radius:99px;background:#f2f4f7;width:120px;overflow:hidden;margin-left:8px}
+.prog b{display:block;height:100%;background:var(--ok)}
+.champ{margin-left:auto;font-weight:700}
 main{flex:1;min-height:0;display:flex;flex-direction:column}
 #scroll,#tableView{flex:1;min-height:0;overflow:auto;background:#fff}
 #sizer{position:relative}
@@ -44,14 +59,25 @@ main{flex:1;min-height:0;display:flex;flex-direction:column}
 /* match card */
 .card{position:absolute;width:250px;height:96px;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 1px 2px rgba(16,24,40,.06);cursor:pointer;overflow:hidden;transition:box-shadow .15s,border-color .15s,opacity .15s}
 .card:hover{border-color:var(--brand);box-shadow:0 4px 14px rgba(79,70,229,.18)}
-.card.live{border-color:var(--live)}
+.card.live{border-color:var(--live);animation:pulse 1.8s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 2px #fee4e2}50%{box-shadow:0 0 0 6px rgba(240,68,56,.14)}}
+.card.live .ch{background:#fef3f2;color:var(--live)}
+.card.completed .ch{background:#f0fdf4;color:#027a48}
+.card.wo{border-color:#fdb022}.card.wo .ch{background:#fffaeb;color:#b54708}
+.card.postponed{border-style:dashed;border-color:#9e77ed}.card.postponed .ch{background:#f4f3ff;color:#6941c6}
+.card.bye{border-style:dashed;border-color:#84caff}.card.bye .ch{background:#eff8ff;color:#175cd3}
 .card.dim{opacity:.22}
 .card.hit{border-color:var(--brand);box-shadow:0 0 0 3px #c7d2fe}
+.card.flash{animation:flash 2.2s}
+@keyframes flash{0%{box-shadow:0 0 0 0 rgba(79,70,229,.6)}30%{box-shadow:0 0 0 8px rgba(79,70,229,.25);background:#eef2ff}100%{box-shadow:none}}
 .ch{height:21px;display:flex;justify-content:space-between;align-items:center;padding:0 8px;background:var(--soft);border-bottom:1px solid var(--line);font-size:11px;font-weight:600;color:var(--mute)}
 .chip{font-weight:600;font-size:10px;padding:1px 7px;border-radius:99px;background:#f2f4f7;color:var(--mute)}
-.chip.live{background:#fef3f2;color:var(--live)}
+.chip.live{background:var(--live);color:#fff}
+.chip.live:before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:#fff;margin-right:4px;animation:blink 1s infinite}
 .chip.completed{background:#ecfdf3;color:#027a48}
-.chip.wo,.chip.postponed{background:#fffaeb;color:#b54708}
+.chip.wo{background:#fffaeb;color:#b54708}
+.chip.postponed{background:#f4f3ff;color:#6941c6}
+.chip.bye{background:#eff8ff;color:#175cd3}
 .tm{height:25px;display:flex;align-items:center;gap:6px;padding:0 8px;font-size:12.5px}
 .tm+.tm{border-top:1px solid #f2f4f7}
 .seed{min-width:24px;text-align:center;font-size:10.5px;color:var(--mute);background:#f2f4f7;border-radius:4px;line-height:16px}
@@ -60,10 +86,14 @@ main{flex:1;min-height:0;display:flex;flex-direction:column}
 .sc{min-width:18px;text-align:right}
 .tm.win{background:#ecfdf3;font-weight:600}
 .tm.lose{color:#98a2b3}
-.cf{height:22px;border-top:1px solid var(--line);display:flex;align-items:center;padding:0 8px;font-size:11px;color:var(--mute);white-space:nowrap}
+.tm.dq{color:#98a2b3}.tm.dq .nm{text-decoration:line-through}
+.tm.void .nm{font-style:italic;color:#98a2b3}
+.cf{height:22px;border-top:1px solid var(--line);display:flex;align-items:center;padding:0 8px;font-size:11px;color:var(--mute);white-space:nowrap;overflow:hidden}
 .cf i{color:#98a2b3}
+.cf .lv{color:var(--live)}.cf .pp{color:#6941c6}.cf .wo{color:#b54708}
 svg path{fill:none;stroke:#d0d5dd;stroke-width:1.5}
 svg path.done{stroke:var(--ok)}
+svg path.void{stroke:#84caff;stroke-dasharray:4 4}
 /* table view */
 .tools{display:flex;gap:10px;align-items:center;padding:10px 20px}
 table{border-collapse:collapse;width:100%;font-size:13px}
@@ -73,6 +103,11 @@ td input,td select{width:100%;border-color:transparent;background:transparent}
 td input:hover,td select:hover{border-color:var(--line)}
 td input.s{width:64px}
 td.der{color:var(--mute);padding-left:14px}
+tr.st-live{background:#fffbfa}tr.st-live td:first-child{box-shadow:inset 3px 0 var(--live)}
+tr.st-completed td:first-child{box-shadow:inset 3px 0 var(--ok)}
+tr.st-wo{background:#fffcf5}tr.st-wo td:first-child{box-shadow:inset 3px 0 var(--warn)}
+tr.st-postponed{background:#fbfaff}tr.st-postponed td:first-child{box-shadow:inset 3px 0 #9e77ed}
+tr.st-bye{background:#f5faff}tr.st-bye td:first-child{box-shadow:inset 3px 0 #2e90fa}
 /* dialogs */
 dialog{border:1px solid var(--line);border-radius:14px;padding:20px;width:min(520px,94vw);box-shadow:0 20px 50px rgba(16,24,40,.2)}
 dialog::backdrop{background:rgba(16,24,40,.35)}
@@ -83,6 +118,8 @@ dialog h2{margin:0 0 14px;font-size:16px}
 label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--mute)}
 label input,label select,label textarea{color:var(--ink);font-size:14px}
 textarea{min-height:60px;resize:vertical}
+.hint{font-size:12px;border-radius:8px;padding:8px 10px;margin:6px 0}
+.hint.wo{background:#fffaeb;color:#b54708}.hint.bye{background:#eff8ff;color:#175cd3}
 .act{display:flex;gap:8px;margin-top:14px;align-items:center}
 #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:9px 16px;border-radius:10px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:99;max-width:90vw}
 #toast.on{opacity:1}
@@ -101,6 +138,7 @@ textarea{min-height:60px;resize:vertical}
   <button id="bBulk">Bulk schedule</button><button id="bCsv">CSV</button><button id="bReset" class="ghost">Reset</button>
 </header>
 <div id="chips"></div>
+<div id="stats"></div>
 
 <main>
   <div id="scroll"><div id="sizer"><div id="stage"></div></div></div>
@@ -120,6 +158,8 @@ textarea{min-height:60px;resize:vertical}
     <div class="trow"><span class="lab">Team B</span><input id="eBname" placeholder="Team name"><input id="eBseed" placeholder="Seed"><input id="eBscore" type="number" placeholder="Score"></div>
     <div class="frow"><label>Date<input id="eDate" type="date"></label><label>Start time<input id="eTime" type="time"></label></div>
     <div class="frow"><label>Status<select id="eStatus"></select></label><label>Winner<select id="eWin"></select></label></div>
+    <div class="hint wo" id="woHint" hidden>Walkover: choose who advances. If neither team showed up, choose “None” — their next opponent automatically advances with a BYE.</div>
+    <div class="hint bye" id="byeHint" hidden>Automatic BYE: this match has no opponent, so the team advances on its own. Status and result are locked.</div>
     <label>Notes (lobby ID, stream link, remarks)<textarea id="eNotes"></textarea></label>
     <div class="act"><button type="button" id="eClear" class="ghost">Clear result</button><span class="grow"></span><button type="button" id="eCancel">Cancel</button><button class="pri" type="submit">Save</button></div>
   </form>
@@ -138,16 +178,16 @@ textarea{min-height:60px;resize:vertical}
 <script>
 /* ================= CONFIG ================= */
 const CONFIG = {
-  SHEET_URL: 'https://script.google.com/macros/s/AKfycbxaWyrtLIqhdFzn13aIOgUQfx158ot_61HOamXl3j2FhJE2Wb4287z3KCpa3EVvdJywxw/exec',
+  SHEET_URL: 'https://script.google.com/macros/s/AKfycbyTcqaq12xP3KxmmikO-hAyWainI3wp5InQNky1Mp1LisFs-o2j3kUsEljdxovDYe2iEA/exec',
   SHEET_TOKEN: 'a1rg-Rz7Kq92xPmL4vT',
   AUTO_PUSH: true,
-  POLL_SECONDS: 0
+  POLL_SECONDS: 10      // checks the Sheet for changes every N seconds (0 = off)
 };
 const ROUND_NAMES = ['Round 1','Round 2','Round 3','Round 4','Round 5','Semifinals','Finals'];
 const STATUS = {scheduled:'Scheduled',live:'Live',completed:'Completed',wo:'Walkover',postponed:'Postponed'};
+const LABEL = Object.assign({bye:'Bye'},STATUS);
 
 /* ================= DATA (from the PDF) ================= */
-// Round 1: [teamA, seedA, teamB, seedB]  -> match # 1..51
 const R1 = [
 ['XT ESPORTS',64,'MRG OFFICIAL',65],['BLOODLINE BROS',32,'KARNYX ESPORTS',97],['XENITH NOVA',33,'EXOTIC ESPORTS',96],
 ['DeadLiest eSports',16,'TLS ESPORTS',113],['NIGHTMARE OFFICIAL',49,'Team Mercenaries Esports',80],['LAGxKB ESPORTS',17,'ZORX ACADEMY',112],
@@ -167,7 +207,6 @@ const R1 = [
 ['CBI ESPORTS',59,'FBI ESPORTS',70],['ASTRAL MUSES',27,'RISING BROTHERHOOD',102],['ROLEX ESPORTS',38,'4MK ESPORTS',91],
 ['EUR x Esports',54,'BXSWR ESPORTS',75],['XTREME FOUR',22,'10 TIMES DEADLY',107],['NightFang',43,'Checkmate Esports',86]
 ];
-// Round 2: number = winner of that Round-1 match, [seed,name] = team with a bye
 const R2 = [
 [[1,'Terrabyte eSports™'],1],[2,3],[4,5],[6,7],
 [[8,'DELTA ESPORTS'],8],[9,10],[[9,'ABC XEROX'],11],[12,13],
@@ -181,14 +220,14 @@ const R2 = [
 
 /* ================= MODEL ================= */
 const mk=(id,round,a,b)=>({id,round,a,b,sa:'',sb:'',win:'',date:'',time:'',status:'scheduled',notes:''});
-const slot=s=>typeof s==='number'?{from:s}:{seed:s[0],name:s[1]};
+const slot=x=>typeof x==='number'?{from:x}:{seed:x[0],name:x[1]};
 function build(){
-  const M=[]; let id=0;
+  const M=[];let id=0;
   R1.forEach(r=>M.push(mk(++id,0,{seed:r[1],name:r[0]},{seed:r[3],name:r[2]})));
   R2.forEach(r=>M.push(mk(++id,1,slot(r[0]),slot(r[1]))));
   for(let rd=2;rd<7;rd++){
     const prev=M.filter(m=>m.round===rd-1);
-    for(let i=0;i<prev.length/2;i++) M.push(mk(++id,rd,{from:prev[2*i].id},{from:prev[2*i+1].id}));
+    for(let i=0;i<prev.length/2;i++)M.push(mk(++id,rd,{from:prev[2*i].id},{from:prev[2*i+1].id}));
   }
   return M;
 }
@@ -205,22 +244,62 @@ load();
 const persist=()=>localStorage.setItem(KEY,JSON.stringify(M.map(pick)));
 function save(){persist();schedulePush()}
 
-function team(sl){ // resolves a slot to {name,seed} or null
-  if(sl.from){const s=byId(sl.from);return s.win?team(s.win==='A'?s.a:s.b):null}
+/* --- teams, walkovers and BYEs ---
+   m.win: ''  = undecided | 'A' / 'B' = that team advances | 'X' = nobody (both disqualified)
+   A slot fed by a match with win 'X' becomes VOID ("BYE"); the opponent then advances automatically. */
+const VOID={name:'BYE',seed:'',void:true};
+function team(sl){
+  if(sl.from){
+    const e=effInfo(byId(sl.from)),src=byId(sl.from);
+    if(e.w==='X')return VOID;
+    if(e.w==='A')return team(src.a);
+    if(e.w==='B')return team(src.b);
+    return null;
+  }
   return sl.name?{name:sl.name,seed:sl.seed}:null;
 }
+function effInfo(m){
+  const A=team(m.a),B=team(m.b);
+  if(m.win==='X')return{w:'X',auto:false};
+  if(m.win==='A'&&A&&!A.void)return{w:'A',auto:false};
+  if(m.win==='B'&&B&&!B.void)return{w:'B',auto:false};
+  if(A&&B){
+    if(A.void&&B.void)return{w:'X',auto:true};
+    if(A.void)return{w:'B',auto:true};
+    if(B.void)return{w:'A',auto:true};
+  }
+  return{w:'',auto:false};
+}
+const effWin=m=>effInfo(m).w;
+const effStatus=m=>effInfo(m).auto?'bye':m.status;
+const ok=t=>t&&!t.void;
+function slotName(sl){const t=team(sl);return t?(t.void?'BYE':t.name):(sl.from?`Winner of #${sl.from}`:'')}
+function dispScores(m){
+  const e=effInfo(m);
+  if(e.auto)return['',''];
+  if(m.status==='wo'){if(e.w==='A')return['W/O','DQ'];if(e.w==='B')return['DQ','W/O'];if(e.w==='X')return['DQ','DQ'];return['',''];}
+  return[m.sa,m.sb];
+}
 function downstream(id){return M.find(x=>x.a.from===id||x.b.from===id)}
-function clearDown(id){const d=downstream(id);if(d&&d.win){d.win='';clearDown(d.id)}}
+function clearDown(id){const d=downstream(id);if(d){d.win='';clearDown(d.id)}}
 function setWin(m,w){if(m.win===w)return;m.win=w;clearDown(m.id)}
 function autoScores(m){
+  if(!['scheduled','completed'].includes(m.status))return;
   if(m.sa===''||m.sb===''||m.sa==null||m.sb==null)return;
-  const x=+m.sa,y=+m.sb; if(isNaN(x)||isNaN(y)||x===y)return;
-  setWin(m,x>y?'A':'B'); if(m.status!=='wo')m.status='completed';
+  const x=+m.sa,y=+m.sb;if(isNaN(x)||isNaN(y)||x===y)return;
+  setWin(m,x>y?'A':'B');m.status='completed';
+}
+function normalize(m){
+  if(!m.win)return;
+  if(m.win==='X'){if(m.status==='scheduled')m.status='wo';else if(m.status!=='wo')setWin(m,'');return}
+  if(m.status==='scheduled')m.status='completed';
+  if(!['completed','wo'].includes(m.status))setWin(m,'');
 }
 
 /* ================= FORMATTERS ================= */
 const pad=n=>String(n).padStart(2,'0');
 const s=v=>v==null?'':String(v).trim();
+const num=v=>{v=s(v);return v!==''&&!isNaN(v)?v:''};
 const esc=v=>String(v==null?'':v).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const fmtDate=iso=>{if(!iso)return'';const[y,m,d]=iso.split('-');return`${d}-${m}-${y}`};
 function parseDate(v){v=s(v);if(!v)return'';let m=v.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})$/);if(m)return`${m[3]}-${pad(m[2])}-${pad(m[1])}`;m=v.match(/^(\d{4})-(\d{2})-(\d{2})/);return m?`${m[1]}-${m[2]}-${m[3]}`:''}
@@ -228,11 +307,11 @@ const fmtTime=t=>{if(!t)return'';let[h,m]=t.split(':').map(Number);const ap=h>=1
 function parseTime(v){v=s(v);if(!v)return'';const m=v.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*([AaPp][Mm])?$/);if(!m)return'';let h=+m[1];if(m[3])h=h%12+(m[3].toLowerCase()==='pm'?12:0);return`${pad(h)}:${m[2]}`}
 const addDays=(d,n)=>{const t=new Date(d+'T00:00:00Z');t.setUTCDate(t.getUTCDate()+n);return t.toISOString().slice(0,10)};
 const $=q=>document.querySelector(q);
-function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),2600)}
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),2800)}
 
 /* ================= BRACKET RENDER ================= */
 const CW=250,CH=96,GAP=14,CG=70,ROW=CH+GAP,HEAD=44,PAD=24;
-let zoom=1;
+let zoom=1,flashIds=new Set();
 const colX=r=>PAD+r*(CW+CG);
 
 function layout(){
@@ -245,9 +324,18 @@ function layout(){
   for(let r=2;r<7;r++)M.filter(m=>m.round===r).forEach(m=>{pos[m.id]=(pos[m.a.from]+pos[m.b.from])/2});
   return{pos,height:cur};
 }
-function row(t,score,win,lose,sl){
-  const label=t?esc(t.name):(sl.from?`<i>Winner of #${sl.from}</i>`:'<i>TBD</i>');
-  return`<div class="tm ${win?'win':''} ${lose?'lose':''}"><span class="seed">${t&&t.seed!==''&&t.seed!=null?esc(t.seed):'–'}</span><span class="nm" title="${t?esc(t.name):''}">${label}</span><b class="sc">${esc(score)}</b></div>`;
+function row(t,score,win,lose,sl,dq){
+  const label=t?(t.void?'BYE':esc(t.name)):(sl.from?`<i>Winner of #${sl.from}</i>`:'<i>TBD</i>');
+  const sd=ok(t)&&t.seed!==''&&t.seed!=null?esc(t.seed):'–';
+  return`<div class="tm ${win?'win':''} ${lose?'lose':''} ${dq?'dq':''} ${t&&t.void?'void':''}"><span class="seed">${sd}</span><span class="nm" title="${ok(t)?esc(t.name):''}">${label}</span><b class="sc">${esc(score)}</b></div>`;
+}
+function footer(m,st){
+  const d=fmtDate(m.date),t=fmtTime(m.time),when=(d||t)?`${d||'<i>no date</i>'} · ${t||'<i>no time</i>'}`:'';
+  if(st==='bye')return'<i>Auto-advance · opponent has a BYE</i>';
+  if(st==='live')return`<b class="lv">LIVE NOW</b>${when?' · '+when:''}`;
+  if(st==='postponed')return`<b class="pp">Postponed</b>${when?' · <s>'+when+'</s>':''}`;
+  if(st==='wo')return`<b class="wo">Walkover</b>${when?' · '+when:''}`;
+  return when||'<i>Set date &amp; time</i>';
 }
 function renderBracket(){
   const{pos,height}=layout();
@@ -257,31 +345,65 @@ function renderBracket(){
   let paths='',cards='',heads='';
   ROUND_NAMES.forEach((n,i)=>{heads+=`<div class="rh" style="left:${colX(i)}px">${n}<small>${M.filter(m=>m.round===i).length} match${i===6?'':'es'}</small></div>`});
   M.forEach(m=>{
-    [m.a,m.b].forEach(sl=>{if(!sl.from)return;const src=byId(sl.from);
+    [m.a,m.b].forEach(sl=>{if(!sl.from)return;const src=byId(sl.from),w=effWin(src);
       const sx=colX(src.round)+CW,sy=cy(src.id),tx=colX(m.round),ty=cy(m.id),mx=sx+CG/2;
-      paths+=`<path class="${src.win?'done':''}" d="M${sx} ${sy}H${mx}V${ty}H${tx}"/>`});
-    const A=team(m.a),B=team(m.b);
-    const names=((A?A.name:'')+' '+(B?B.name:'')).toLowerCase();
+      paths+=`<path class="${w==='A'||w==='B'?'done':w==='X'?'void':''}" d="M${sx} ${sy}H${mx}V${ty}H${tx}"/>`});
+    const A=team(m.a),B=team(m.b),e=effInfo(m),st=effStatus(m),[da,db]=dispScores(m);
+    const names=((ok(A)?A.name:'')+' '+(ok(B)?B.name:'')).toLowerCase();
     const cls=q?(names.includes(q)?'hit':'dim'):'';
-    const when=(m.date||m.time)?`${fmtDate(m.date)||'<i>no date</i>'} · ${fmtTime(m.time)||'<i>no time</i>'}`:'<i>Set date &amp; time</i>';
-    cards+=`<div class="card ${m.status} ${cls}" data-id="${m.id}" style="left:${colX(m.round)}px;top:${cy(m.id)-CH/2}px">
-      <div class="ch"><span>Match ${m.id}</span><span class="chip ${m.status}">${STATUS[m.status]}</span></div>
-      ${row(A,m.sa,m.win==='A',m.win==='B',m.a)}${row(B,m.sb,m.win==='B',m.win==='A',m.b)}
-      <div class="cf">${when}</div></div>`;
+    const woDone=m.status==='wo'&&!e.auto&&e.w!=='';
+    cards+=`<div class="card ${st} ${cls} ${flashIds.has(m.id)?'flash':''}" data-id="${m.id}" style="left:${colX(m.round)}px;top:${cy(m.id)-CH/2}px">
+      <div class="ch"><span>Match ${m.id}</span><span class="chip ${st}">${LABEL[st]}</span></div>
+      ${row(A,da,e.w==='A',e.w==='B',m.a,woDone&&e.w!=='A')}${row(B,db,e.w==='B',e.w==='A',m.b,woDone&&e.w!=='B')}
+      <div class="cf">${footer(m,st)}</div></div>`;
   });
   $('#stage').style.cssText=`width:${W}px;height:${H}px;transform:scale(${zoom})`;
   $('#sizer').style.cssText=`width:${W*zoom}px;height:${H*zoom}px`;
   $('#stage').innerHTML=`<div id="heads" style="width:${W}px">${heads}</div><svg width="${W}" height="${H}" style="position:absolute;left:0;top:0;pointer-events:none">${paths}</svg>${cards}`;
 }
 
+/* ================= STATS BAR ================= */
+function renderStats(){
+  const c={live:0,completed:0,wo:0,postponed:0,bye:0,scheduled:0};
+  M.forEach(m=>c[effStatus(m)]++);
+  const decided=M.filter(m=>effWin(m)).length,pct=Math.round(100*decided/M.length);
+  const f=M[M.length-1],fe=effInfo(f),champ=fe.w==='A'||fe.w==='B'?team(fe.w==='A'?f.a:f.b):null;
+  const nxt=M.filter(m=>effStatus(m)==='scheduled'&&m.date&&ok(team(m.a))&&ok(team(m.b)))
+    .sort((x,y)=>(x.date+(x.time||'99'))<(y.date+(y.time||'99'))?-1:1)[0];
+  $('#stats').innerHTML=
+   `<span class="pill live" data-go="live"><i></i>${c.live} Live</span>`+
+   `<span class="pill completed"><i></i>${c.completed} Completed</span>`+
+   `<span class="pill wo"><i></i>${c.wo} Walkover</span>`+
+   `<span class="pill postponed"><i></i>${c.postponed} Postponed</span>`+
+   `<span class="pill bye"><i></i>${c.bye} BYE</span>`+
+   `<span class="pill"><i></i>${c.scheduled} Upcoming</span>`+
+   `<span class="prog"><b style="width:${pct}%"></b></span><span style="color:var(--mute)">${decided}/${M.length} decided</span>`+
+   (nxt?`<span class="pill" data-go="${nxt.id}">Next: #${nxt.id} · ${fmtDate(nxt.date)} ${fmtTime(nxt.time)}</span>`:'')+
+   (ok(champ)?`<span class="champ">🏆 Champion: ${esc(champ.name)}</span>`:'');
+}
+$('#stats').addEventListener('click',e=>{
+  const p=e.target.closest('[data-go]');if(!p)return;const g=p.dataset.go;
+  if(view!=='b')setView('b');
+  const el=g==='live'?document.querySelector('.card.live'):document.querySelector(`.card[data-id="${g}"]`);
+  if(el)el.scrollIntoView({block:'center',inline:'center',behavior:'smooth'});else toast('No live match right now');
+});
+
 /* ================= EDITOR MODAL ================= */
 let cur=null;
 const dlg=$('#dlg');
 $('#eStatus').innerHTML=Object.entries(STATUS).map(([k,v])=>`<option value="${k}">${v}</option>`).join('');
 function fillWinner(m,val){
-  const A=team(m.a),B=team(m.b);
-  $('#eWin').innerHTML='<option value="">— not decided —</option>'+(A?`<option value="A">${esc(A.name)}</option>`:'')+(B?`<option value="B">${esc(B.name)}</option>`:'');
+  const A=team(m.a),B=team(m.b),wo=$('#eStatus').value==='wo';
+  $('#eWin').innerHTML='<option value="">— not decided —</option>'+(ok(A)?`<option value="A">${esc(A.name)}</option>`:'')+(ok(B)?`<option value="B">${esc(B.name)}</option>`:'')+(wo?'<option value="X">None — both disqualified (next opponent gets BYE)</option>':'');
   $('#eWin').value=val||'';
+  if($('#eWin').value!==(val||''))$('#eWin').value='';
+}
+function refreshModal(){
+  const m=cur,auto=effInfo(m).auto,wo=$('#eStatus').value==='wo';
+  fillWinner(m,$('#eWin').value);
+  ['#eStatus','#eWin'].forEach(i=>$(i).disabled=auto);
+  ['#eAscore','#eBscore'].forEach(i=>$(i).disabled=auto||wo);
+  $('#byeHint').hidden=!auto;$('#woHint').hidden=!wo||auto;
 }
 function openEdit(id){
   cur=byId(id);const m=cur;
@@ -289,28 +411,39 @@ function openEdit(id){
   [['A',m.a,m.sa],['B',m.b,m.sb]].forEach(([k,sl,sc])=>{
     const t=team(sl),n=$('#e'+k+'name'),sd=$('#e'+k+'seed');
     n.disabled=sd.disabled=!!sl.from;
-    n.value=sl.from?(t?t.name:`Winner of #${sl.from}`):sl.name;
-    sd.value=sl.from?(t&&t.seed!=null?t.seed:''):(sl.seed==null?'':sl.seed);
+    n.value=sl.from?(t?(t.void?'BYE':t.name):`Winner of #${sl.from}`):sl.name;
+    sd.value=sl.from?(ok(t)&&t.seed!=null?t.seed:''):(sl.seed==null?'':sl.seed);
     $('#e'+k+'score').value=sc;
   });
   $('#eDate').value=m.date;$('#eTime').value=m.time;$('#eStatus').value=m.status;$('#eNotes').value=m.notes;
-  fillWinner(m,m.win);
+  fillWinner(m,m.win);refreshModal();
   dlg.showModal();
 }
 ['#eAscore','#eBscore'].forEach(id=>$(id).addEventListener('input',()=>{
-  const a=$('#eAscore').value,b=$('#eBscore').value;
-  if(a===''||b===''||+a===+b)return;
-  $('#eWin').value=+a>+b?'A':'B'; if($('#eStatus').value!=='wo')$('#eStatus').value='completed';
+  const st=$('#eStatus').value;if(!['scheduled','completed'].includes(st))return;
+  const a=$('#eAscore').value,b=$('#eBscore').value;if(a===''||b===''||+a===+b)return;
+  $('#eStatus').value='completed';fillWinner(cur,'');$('#eWin').value=+a>+b?'A':'B';
 }));
-$('#eClear').onclick=()=>{$('#eAscore').value='';$('#eBscore').value='';$('#eWin').value='';$('#eStatus').value='scheduled'};
+$('#eStatus').addEventListener('change',()=>{
+  if($('#eStatus').value==='completed'&&!$('#eWin').value){
+    const a=$('#eAscore').value,b=$('#eBscore').value;
+    if(a!==''&&b!==''&&+a!==+b){fillWinner(cur,'');$('#eWin').value=+a>+b?'A':'B'}
+  }
+  refreshModal();
+});
+$('#eClear').onclick=()=>{$('#eAscore').value='';$('#eBscore').value='';$('#eStatus').value='scheduled';fillWinner(cur,'');refreshModal()};
 $('#eCancel').onclick=()=>dlg.close();
 $('#edForm').onsubmit=e=>{
-  e.preventDefault();const m=cur;
+  e.preventDefault();const m=cur,auto=effInfo(m).auto;
   if(!m.a.from){m.a.name=$('#eAname').value.trim();m.a.seed=$('#eAseed').value.trim()}
   if(!m.b.from){m.b.name=$('#eBname').value.trim();m.b.seed=$('#eBseed').value.trim()}
-  m.sa=$('#eAscore').value;m.sb=$('#eBscore').value;m.date=$('#eDate').value;m.time=$('#eTime').value;
-  m.status=$('#eStatus').value;m.notes=$('#eNotes').value;
-  setWin(m,$('#eWin').value);
+  m.date=$('#eDate').value;m.time=$('#eTime').value;m.notes=$('#eNotes').value;
+  if(!auto){
+    const st=$('#eStatus').value;m.status=st;
+    m.sa=st==='wo'?'':$('#eAscore').value;m.sb=st==='wo'?'':$('#eBscore').value;
+    setWin(m,$('#eWin').value);normalize(m);
+    if(st==='wo'&&!m.win)toast('Walkover saved — open the match again to choose who advances');
+  }
   dlg.close();save();renderAll();
 };
 $('#stage').addEventListener('click',e=>{const c=e.target.closest('.card');if(c)openEdit(+c.dataset.id)});
@@ -321,33 +454,41 @@ $('#rf').onchange=renderTable;
 function renderTable(){
   const rf=$('#rf').value;
   $('#tb').innerHTML=M.filter(m=>rf==='all'||m.round==rf).map(m=>{
-    const A=team(m.a),B=team(m.b);
-    const nameCell=(sl,t,f)=>sl.from?`<td class="der">${t?esc(t.name):'Winner of #'+sl.from}</td>`:`<td><input data-id="${m.id}" data-f="${f}" value="${esc(sl.name)}"></td>`;
-    const st=Object.entries(STATUS).map(([k,v])=>`<option value="${k}" ${m.status===k?'selected':''}>${v}</option>`).join('');
-    const wn=`<option value="">—</option>${A?`<option value="A" ${m.win==='A'?'selected':''}>${esc(A.name)}</option>`:''}${B?`<option value="B" ${m.win==='B'?'selected':''}>${esc(B.name)}</option>`:''}`;
-    return`<tr><td>${m.id}</td><td>${ROUND_NAMES[m.round]}</td>${nameCell(m.a,A,'an')}
-      <td><input class="s" type="number" data-id="${m.id}" data-f="sa" value="${esc(m.sa)}"></td>
-      <td><input class="s" type="number" data-id="${m.id}" data-f="sb" value="${esc(m.sb)}"></td>
-      ${nameCell(m.b,B,'bn')}
-      <td><select data-id="${m.id}" data-f="win">${wn}</select></td>
+    const A=team(m.a),B=team(m.b),e=effInfo(m),st=effStatus(m),[da,db]=dispScores(m);
+    const nm=t=>t?(t.void?'BYE':esc(t.name)):'';
+    const nameCell=(sl,t,f)=>sl.from?`<td class="der">${t?nm(t):'Winner of #'+sl.from}</td>`:`<td><input data-id="${m.id}" data-f="${f}" value="${esc(sl.name)}"></td>`;
+    const lock=st==='bye'||m.status==='wo';
+    const scoreCell=(f,v,d)=>lock?`<td class="der">${esc(d)}</td>`:`<td><input class="s" type="number" data-id="${m.id}" data-f="${f}" value="${esc(v)}"></td>`;
+    const opts=Object.entries(STATUS).map(([k,v])=>`<option value="${k}" ${m.status===k?'selected':''}>${v}</option>`).join('');
+    const wn=`<option value="">—</option>${ok(A)?`<option value="A" ${m.win==='A'?'selected':''}>${esc(A.name)}</option>`:''}${ok(B)?`<option value="B" ${m.win==='B'?'selected':''}>${esc(B.name)}</option>`:''}${m.status==='wo'?`<option value="X" ${m.win==='X'?'selected':''}>None (both DQ)</option>`:''}`;
+    const statusCell=st==='bye'?'<td class="der">Bye (auto)</td>':`<td><select data-id="${m.id}" data-f="status">${opts}</select></td>`;
+    const winCell=st==='bye'?`<td class="der">${e.w==='A'?nm(A):e.w==='B'?nm(B):'—'}</td>`:`<td><select data-id="${m.id}" data-f="win">${wn}</select></td>`;
+    return`<tr class="st-${st}"><td>${m.id}</td><td>${ROUND_NAMES[m.round]}</td>${nameCell(m.a,A,'an')}
+      ${scoreCell('sa',m.sa,da)}${scoreCell('sb',m.sb,db)}
+      ${nameCell(m.b,B,'bn')}${winCell}
       <td><input type="date" data-id="${m.id}" data-f="date" value="${m.date}"></td>
       <td><input type="time" data-id="${m.id}" data-f="time" value="${m.time}"></td>
-      <td><select data-id="${m.id}" data-f="status">${st}</select></td>
+      ${statusCell}
       <td><input data-id="${m.id}" data-f="notes" value="${esc(m.notes)}"></td></tr>`;
   }).join('');
 }
 $('#tb').addEventListener('change',e=>{
   const t=e.target,f=t.dataset.f;if(!f)return;const m=byId(+t.dataset.id),v=t.value;
   if(f==='an')m.a.name=v.trim();else if(f==='bn')m.b.name=v.trim();
-  else if(f==='sa'||f==='sb'){m[f]=v;autoScores(m)}
-  else if(f==='win')setWin(m,v);
-  else m[f]=v;
-  save();renderTable();
+  else if(f==='sa'||f==='sb'){m[f]=v;autoScores(m);normalize(m)}
+  else if(f==='win'){setWin(m,v);normalize(m)}
+  else if(f==='status'){
+    m.status=v;if(v==='wo'){m.sa='';m.sb=''}
+    if(v==='completed'&&!m.win)autoScores(m);
+    normalize(m);
+    if(v==='wo'&&!m.win){save();renderTable();renderStats();toast('Walkover — choose who advances (or None if both are DQ)');openEdit(m.id);return}
+  }else m[f]=v;
+  save();renderTable();renderStats();
 });
 
 /* ================= VIEWS / TOOLBAR ================= */
 let view='b';
-function renderAll(){view==='b'?renderBracket():renderTable()}
+function renderAll(){renderStats();view==='b'?renderBracket():renderTable()}
 function setView(v){
   view=v;$('#scroll').hidden=v!=='b';$('#tableView').hidden=v==='b';$('#zoomBox').hidden=v!=='b';
   $('#tabB').classList.toggle('on',v==='b');$('#tabT').classList.toggle('on',v!=='b');renderAll();
@@ -378,20 +519,21 @@ $('#bkGo').onclick=()=>{
 
 /* export / reset */
 function toRows(){return M.map(m=>{
-  const A=team(m.a),B=team(m.b),w=m.win==='A'?A:m.win==='B'?B:null;
+  const A=team(m.a),B=team(m.b),e=effInfo(m),[da,db]=dispScores(m);
+  const wn=e.w==='A'?A.name:e.w==='B'?B.name:e.w==='X'?'NO WINNER (DQ)':'';
   return{match_no:m.id,round:ROUND_NAMES[m.round],
-    team_a:A?A.name:(m.a.from?`Winner of #${m.a.from}`:''),seed_a:A&&A.seed!=null?A.seed:'',score_a:m.sa,
-    team_b:B?B.name:(m.b.from?`Winner of #${m.b.from}`:''),seed_b:B&&B.seed!=null?B.seed:'',score_b:m.sb,
-    winner:w?w.name:'',date:fmtDate(m.date),start_time:fmtTime(m.time),status:STATUS[m.status],notes:m.notes};
+    team_a:slotName(m.a),seed_a:ok(A)&&A.seed!=null?A.seed:'',score_a:da,
+    team_b:slotName(m.b),seed_b:ok(B)&&B.seed!=null?B.seed:'',score_b:db,
+    winner:wn,date:fmtDate(m.date),start_time:fmtTime(m.time),status:LABEL[effStatus(m)],notes:m.notes};
 })}
-// layout of the visual bracket, drawn into the "Bracket" tab of the Sheet
+// layout of the visual bracket, drawn into the "Bracket" tab of the Sheet (7 sheet rows per card slot)
 function bracketPayload(){
   const{pos}=layout();
   return{rounds:ROUND_NAMES,matches:M.map(m=>{
-    const A=team(m.a),B=team(m.b);
-    return{id:m.id,round:m.round,cr:Math.floor(6*pos[m.id]/ROW-1+1e-6),
-      a:A?A.name:(m.a.from?`Winner of #${m.a.from}`:''),b:B?B.name:(m.b.from?`Winner of #${m.b.from}`:''),
-      sa:m.sa,sb:m.sb,date:fmtDate(m.date),time:fmtTime(m.time),win:m.win,from:[m.a.from||0,m.b.from||0]};
+    const e=effInfo(m),[da,db]=dispScores(m);
+    return{id:m.id,round:m.round,cr:Math.round(7*pos[m.id]/ROW-3)+1,
+      a:slotName(m.a),b:slotName(m.b),sa:da,sb:db,date:fmtDate(m.date),time:fmtTime(m.time),
+      win:e.w,status:effStatus(m),from:[m.a.from||0,m.b.from||0]};
   })};
 }
 $('#bCsv').onclick=()=>{
@@ -399,13 +541,16 @@ $('#bCsv').onclick=()=>{
   const csv=[H.join(',')].concat(rows.map(r=>H.map(k=>q(r[k])).join(','))).join('\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='a1rg-bracket.csv';a.click();
 };
-$('#bReset').onclick=()=>{if(confirm('Reset ALL matches (teams, scores, dates) to the original PDF data?')){localStorage.removeItem(KEY);M=build();save();renderAll()}};
+$('#bReset').onclick=()=>{if(confirm('Reset ALL matches (teams, scores, dates, results) to the original PDF data?')){localStorage.removeItem(KEY);M=build();save();renderAll()}};
 
 /* ================= GOOGLE SHEET SYNC ================= */
-let pushT=null,lastErr='';
+let pushT=null,pushing=false,pushAgain=false,lastErr='',lastSig='';
+const sigRows=rows=>rows.map(r=>Object.keys(r).map(k=>String(r[k]==null?'':r[k])).join('|')).join('\n');
+const sigM=m=>[m.a.name,m.b.name,m.sa,m.sb,m.win,m.date,m.time,m.status,m.notes].join('|');
 function setSync(st,msg){
-  const e=$('#sync');e.className='sync '+(st||'');
-  e.textContent=msg||({ok:'Synced '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),busy:'Syncing…',err:'Sync error – click for details'}[st]||'Local only');
+  const e=$('#sync');e.className='sync '+(st||'')+(st==='ok'&&CONFIG.POLL_SECONDS>0?' polling':'');
+  const t=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  e.textContent=msg||({ok:(CONFIG.POLL_SECONDS>0?'Live · synced ':'Synced ')+t,busy:'Syncing…',err:'Sync error – click for details'}[st]||'Local only');
 }
 $('#sync').onclick=()=>{
   if(lastErr)alert('Sheet sync problem:\n\n'+lastErr);
@@ -422,8 +567,7 @@ function fail(e){
 }
 async function callSheet(opts,query){
   const r=await fetch(CONFIG.SHEET_URL+(query||''),opts);
-  const txt=await r.text();
-  let j;
+  const txt=await r.text();let j;
   try{j=JSON.parse(txt)}
   catch(_){throw new Error('The Sheet script did not return JSON (HTTP '+r.status+'). Usually the Web App access is not "Anyone", the script was not authorized (run setup() once), or you have not redeployed.\n\nResponse started with: '+txt.slice(0,100).replace(/\s+/g,' '))}
   if(j.error)throw new Error(j.error);
@@ -435,21 +579,31 @@ function schedulePush(){
 }
 async function push(manual){
   if(!CONFIG.SHEET_URL){toast('Add SHEET_URL in CONFIG first');return}
-  clearTimeout(pushT);pushT=null;setSync('busy');
+  clearTimeout(pushT);pushT=null;
+  if(pushing){pushAgain=true;return}
+  pushing=true;setSync('busy');
+  const rows=toRows();
   try{
-    const j=await callSheet({method:'POST',body:JSON.stringify({token:CONFIG.SHEET_TOKEN,rows:toRows(),bracket:bracketPayload()})});
-    lastErr='';setSync('ok');if(manual)toast('Pushed '+(j.count||'')+' matches + bracket to Sheet');
+    const j=await callSheet({method:'POST',body:JSON.stringify({token:CONFIG.SHEET_TOKEN,rows,bracket:bracketPayload()})});
+    lastSig=sigRows(rows);lastErr='';setSync('ok');
+    if(manual)toast('Pushed '+(j.count||'')+' matches + bracket to Sheet');
   }catch(e){fail(e)}
+  finally{pushing=false;if(pushAgain){pushAgain=false;push(false)}}
 }
 function applyRows(rows){
   rows.slice().sort((p,q)=>p.match_no-q.match_no).forEach(r=>{
     const m=byId(+r.match_no);if(!m)return;
     if(!m.a.from&&r.team_a!=null){m.a.name=s(r.team_a);m.a.seed=s(r.seed_a)}
     if(!m.b.from&&r.team_b!=null){m.b.name=s(r.team_b);m.b.seed=s(r.seed_b)}
-    m.sa=s(r.score_a);m.sb=s(r.score_b);m.date=parseDate(r.date);m.time=parseTime(r.start_time);m.notes=s(r.notes);
-    m.status=Object.keys(STATUS).find(k=>STATUS[k].toLowerCase()===s(r.status).toLowerCase())||'scheduled';
+    const stTxt=s(r.status).toLowerCase(),isBye=stTxt==='bye';
+    m.status=Object.keys(STATUS).find(k=>STATUS[k].toLowerCase()===stTxt)||'scheduled';
+    m.sa=num(r.score_a);m.sb=num(r.score_b);               // "W/O" and "DQ" are display-only
+    m.date=parseDate(r.date);m.time=parseTime(r.start_time);m.notes=s(r.notes);
     const w=s(r.winner).toLowerCase(),A=team(m.a),B=team(m.b);
-    m.win=w&&A&&A.name.toLowerCase()===w?'A':w&&B&&B.name.toLowerCase()===w?'B':'';
+    m.win=isBye?'':/^(no winner|both dq|none)/.test(w)?'X':(w&&ok(A)&&A.name.toLowerCase()===w)?'A':(w&&ok(B)&&B.name.toLowerCase()===w)?'B':'';
+    if(m.status==='wo'){m.sa='';m.sb=''}
+    normalize(m);
+    if(!m.win)autoScores(m);
   });
 }
 // returns true = pulled, false = sheet empty, null = error
@@ -460,20 +614,34 @@ async function pull(manual){
     const j=await callSheet({cache:'no-store'},'?token='+encodeURIComponent(CONFIG.SHEET_TOKEN)+'&t='+Date.now());
     lastErr='';
     if(!j.rows||!j.rows.length){setSync('ok');if(manual)toast('Sheet is empty — use Push to upload');return false}
-    applyRows(j.rows);persist();renderAll();setSync('ok');
-    if(manual)toast(j.source==='bracket'?'Pulled edits from the Bracket tab':'Pulled from Sheet');
-    if(j.source==='bracket')push(false);   // refresh both tabs so they match again
+    const before=M.map(sigM);
+    applyRows(j.rows);
+    const changed=[];M.forEach((m,i)=>{if(sigM(m)!==before[i])changed.push(m.id)});
+    persist();
+    flashIds=new Set(changed);renderAll();flashIds=new Set();
+    setSync('ok');
+    if(changed.length)toast(`Sheet updated · ${changed.length} match${changed.length>1?'es':''} changed`);
+    else if(manual)toast('Already up to date');
+    if(sigRows(toRows())!==lastSig)push(false);   // refresh the Bracket tab + normalise the Matches tab
     return true;
   }catch(e){fail(e);return null}
 }
 $('#bPush').onclick=()=>push(true);
 $('#bPull').onclick=()=>pull(true);
+function canPoll(){
+  const a=document.activeElement;
+  return !document.hidden&&!pushT&&!pushing&&!dlg.open&&!$('#bulk').open&&
+    !(a&&$('#tableView').contains(a)&&/INPUT|SELECT|TEXTAREA/.test(a.tagName));
+}
 
 /* ================= START ================= */
-renderBracket();
+renderAll();
 if(CONFIG.SHEET_URL){
-  pull(false).then(ok=>{if(ok===false)push(false)});   // empty sheet on first connect -> uploads everything
-  if(CONFIG.POLL_SECONDS>0)setInterval(()=>{if(!pushT&&!dlg.open)pull(false)},CONFIG.POLL_SECONDS*1000);
+  pull(false).then(ok=>{if(ok===false)push(false)});   // sheet wins on load; an empty sheet gets uploaded
+  if(CONFIG.POLL_SECONDS>0){
+    setInterval(()=>{if(canPoll())pull(false)},CONFIG.POLL_SECONDS*1000);
+    document.addEventListener('visibilitychange',()=>{if(!document.hidden&&canPoll())pull(false)});
+  }
 }
 </script>
 </body>
