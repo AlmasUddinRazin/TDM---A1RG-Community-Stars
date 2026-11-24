@@ -145,7 +145,7 @@ textarea{min-height:60px;resize:vertical}
   <div id="tableView" hidden>
     <div class="tools"><label style="flex-direction:row;align-items:center;gap:8px">Round <select id="rf"></select></label></div>
     <table>
-      <thead><tr><th>#</th><th>Round</th><th>Team A</th><th>Score</th><th>Score</th><th>Team B</th><th>Winner</th><th>Date</th><th>Start time</th><th>Status</th><th>Notes</th></tr></thead>
+      <thead><tr><th>#</th><th>Round</th><th>Team A</th><th>Score</th><th>Score</th><th>Team B</th><th>Result / Winner</th><th>Date</th><th>Start time</th><th>Status</th><th>Notes</th></tr></thead>
       <tbody id="tb"></tbody>
     </table>
   </div>
@@ -154,11 +154,11 @@ textarea{min-height:60px;resize:vertical}
 <dialog id="dlg">
   <form id="edForm">
     <h2 id="edTitle"></h2>
-    <div class="trow"><span class="lab">Team A</span><input id="eAname" placeholder="Team name"><input id="eAseed" placeholder="Seed"><input id="eAscore" type="number" placeholder="Score"></div>
-    <div class="trow"><span class="lab">Team B</span><input id="eBname" placeholder="Team name"><input id="eBseed" placeholder="Seed"><input id="eBscore" type="number" placeholder="Score"></div>
+    <div class="trow"><span class="lab">Team A</span><input id="eAname" placeholder="Team name"><input id="eAseed" placeholder="Seed"><input id="eAscore" type="text" inputmode="numeric" placeholder="Score"></div>
+    <div class="trow"><span class="lab">Team B</span><input id="eBname" placeholder="Team name"><input id="eBseed" placeholder="Seed"><input id="eBscore" type="text" inputmode="numeric" placeholder="Score"></div>
     <div class="frow"><label>Date<input id="eDate" type="date"></label><label>Start time<input id="eTime" type="time"></label></div>
-    <div class="frow"><label>Status<select id="eStatus"></select></label><label>Winner<select id="eWin"></select></label></div>
-    <div class="hint wo" id="woHint" hidden>Walkover: choose who advances. If neither team showed up, choose “None” — their next opponent automatically advances with a BYE.</div>
+    <div class="frow"><label>Status<select id="eStatus"></select></label><label>Result / Winner<select id="eWin"></select></label></div>
+    <div class="hint wo" id="woHint" hidden>Walkover: pick who advances in “Result / Winner”. “Both DQ” gives their next opponent a BYE. Tip: typing DQ or W/O in a score box does this automatically.</div>
     <div class="hint bye" id="byeHint" hidden>Automatic BYE: this match has no opponent, so the team advances on its own. Status and result are locked.</div>
     <label>Notes (lobby ID, stream link, remarks)<textarea id="eNotes"></textarea></label>
     <div class="act"><button type="button" id="eClear" class="ghost">Clear result</button><span class="grow"></span><button type="button" id="eCancel">Cancel</button><button class="pri" type="submit">Save</button></div>
@@ -178,7 +178,9 @@ textarea{min-height:60px;resize:vertical}
 <script>
 /* ================= CONFIG ================= */
 const CONFIG = {
-  SHEET_URL: 'https://script.google.com/macros/s/AKfycbyTcqaq12xP3KxmmikO-hAyWainI3wp5InQNky1Mp1LisFs-o2j3kUsEljdxovDYe2iEA/exec',
+  // Must be the /exec URL of the deployment you actually use.
+  // Keep the same URL when updating the script: Deploy > Manage deployments > pencil > Version: New version.
+  SHEET_URL: 'https://script.google.com/macros/s/AKfycbxaWyrtLIqhdFzn13aIOgUQfx158ot_61HOamXl3j2FhJE2Wb4287z3KCpa3EVvdJywxw/exec',
   SHEET_TOKEN: 'a1rg-Rz7Kq92xPmL4vT',
   AUTO_PUSH: true,
   POLL_SECONDS: 10      // checks the Sheet for changes every N seconds (0 = off)
@@ -289,11 +291,36 @@ function autoScores(m){
   const x=+m.sa,y=+m.sb;if(isNaN(x)||isNaN(y)||x===y)return;
   setWin(m,x>y?'A':'B');m.status='completed';
 }
+/* A winner always means Completed (or Walkover) - even if the status was Live. */
 function normalize(m){
   if(!m.win)return;
-  if(m.win==='X'){if(m.status==='scheduled')m.status='wo';else if(m.status!=='wo')setWin(m,'');return}
-  if(m.status==='scheduled')m.status='completed';
-  if(!['completed','wo'].includes(m.status))setWin(m,'');
+  if(m.win==='X'){m.status='wo';return}
+  if(m.status!=='wo')m.status='completed';
+}
+/* Result codes: '' | A | B (win) | woA | woB (win by walkover, opponent DQ) | X (both DQ) */
+const resultCode=m=>!m.win?'':m.win==='X'?'X':m.status==='wo'?'wo'+m.win:m.win;
+function applyResult(m,c){
+  setWin(m,c==='woA'?'A':c==='woB'?'B':c);
+  if(c==='X'||c==='woA'||c==='woB'){m.status='wo';m.sa='';m.sb=''}
+  else if(c==='A'||c==='B')m.status='completed';
+  else if(m.status==='completed'||m.status==='wo')m.status='scheduled';
+}
+/* typing DQ or W/O in a score box: DQ on a team = the other team advances; W/O on a team = that team advances */
+function scoreToken(a,b){
+  const t=v=>String(v==null?'':v).toUpperCase().replace(/[^A-Z\/]/g,''),x=t(a),y=t(b);
+  const w=z=>z==='WO'||z==='W/O',d=z=>z==='DQ';
+  if(d(x)&&d(y))return'X';
+  if(w(x)&&!w(y)||d(y)&&!d(x))return'woA';
+  if(w(y)&&!w(x)||d(x)&&!d(y))return'woB';
+  return'';
+}
+function winnerOptions(m,sel){
+  const A=team(m.a),B=team(m.b),o=(v,t)=>`<option value="${v}"${v===sel?' selected':''}>${t}</option>`;
+  return o('','— not decided —')
+   +(ok(A)?o('A',esc(A.name)+' wins'):'')+(ok(B)?o('B',esc(B.name)+' wins'):'')
+   +(ok(A)?o('woA',esc(A.name)+' wins by W/O (opponent DQ)'):'')
+   +(ok(B)?o('woB',esc(B.name)+' wins by W/O (opponent DQ)'):'')
+   +o('X','Both DQ (next opponent gets BYE)');
 }
 
 /* ================= FORMATTERS ================= */
@@ -392,15 +419,9 @@ $('#stats').addEventListener('click',e=>{
 let cur=null;
 const dlg=$('#dlg');
 $('#eStatus').innerHTML=Object.entries(STATUS).map(([k,v])=>`<option value="${k}">${v}</option>`).join('');
-function fillWinner(m,val){
-  const A=team(m.a),B=team(m.b),wo=$('#eStatus').value==='wo';
-  $('#eWin').innerHTML='<option value="">— not decided —</option>'+(ok(A)?`<option value="A">${esc(A.name)}</option>`:'')+(ok(B)?`<option value="B">${esc(B.name)}</option>`:'')+(wo?'<option value="X">None — both disqualified (next opponent gets BYE)</option>':'');
-  $('#eWin').value=val||'';
-  if($('#eWin').value!==(val||''))$('#eWin').value='';
-}
+function fillWinner(m,val){$('#eWin').innerHTML=winnerOptions(m,val||'')}
 function refreshModal(){
-  const m=cur,auto=effInfo(m).auto,wo=$('#eStatus').value==='wo';
-  fillWinner(m,$('#eWin').value);
+  const auto=effInfo(cur).auto,wo=$('#eStatus').value==='wo';
   ['#eStatus','#eWin'].forEach(i=>$(i).disabled=auto);
   ['#eAscore','#eBscore'].forEach(i=>$(i).disabled=auto||wo);
   $('#byeHint').hidden=!auto;$('#woHint').hidden=!wo||auto;
@@ -416,19 +437,33 @@ function openEdit(id){
     $('#e'+k+'score').value=sc;
   });
   $('#eDate').value=m.date;$('#eTime').value=m.time;$('#eStatus').value=m.status;$('#eNotes').value=m.notes;
-  fillWinner(m,m.win);refreshModal();
+  fillWinner(m,resultCode(m));refreshModal();
   dlg.showModal();
 }
+/* picking a result sets the status automatically */
+function syncFromWinner(){
+  const w=$('#eWin').value,st=$('#eStatus');
+  if(w==='A'||w==='B')st.value='completed';
+  else if(w)st.value='wo';
+  else if(['completed','wo'].includes(st.value))st.value='scheduled';
+  if(st.value==='wo'){$('#eAscore').value='';$('#eBscore').value=''}
+  refreshModal();
+}
+$('#eWin').addEventListener('change',syncFromWinner);
 ['#eAscore','#eBscore'].forEach(id=>$(id).addEventListener('input',()=>{
-  const st=$('#eStatus').value;if(!['scheduled','completed'].includes(st))return;
-  const a=$('#eAscore').value,b=$('#eBscore').value;if(a===''||b===''||+a===+b)return;
-  $('#eStatus').value='completed';fillWinner(cur,'');$('#eWin').value=+a>+b?'A':'B';
+  const a=$('#eAscore').value,b=$('#eBscore').value,tk=scoreToken(a,b);
+  if(tk){fillWinner(cur,tk);syncFromWinner();return}
+  if(!['scheduled','completed'].includes($('#eStatus').value))return;
+  if(a===''||b===''||isNaN(a)||isNaN(b)||+a===+b)return;
+  fillWinner(cur,+a>+b?'A':'B');syncFromWinner();
 }));
 $('#eStatus').addEventListener('change',()=>{
-  if($('#eStatus').value==='completed'&&!$('#eWin').value){
-    const a=$('#eAscore').value,b=$('#eBscore').value;
-    if(a!==''&&b!==''&&+a!==+b){fillWinner(cur,'');$('#eWin').value=+a>+b?'A':'B'}
-  }
+  const st=$('#eStatus').value,w=$('#eWin').value;
+  if(['scheduled','live','postponed'].includes(st))$('#eWin').value='';
+  else if(st==='completed'&&w.startsWith('wo'))$('#eWin').value=w.slice(2);
+  else if(st==='completed'&&w==='X')$('#eWin').value='';
+  else if(st==='wo'&&(w==='A'||w==='B'))$('#eWin').value='wo'+w;
+  if(st==='wo'){$('#eAscore').value='';$('#eBscore').value=''}
   refreshModal();
 });
 $('#eClear').onclick=()=>{$('#eAscore').value='';$('#eBscore').value='';$('#eStatus').value='scheduled';fillWinner(cur,'');refreshModal()};
@@ -439,10 +474,10 @@ $('#edForm').onsubmit=e=>{
   if(!m.b.from){m.b.name=$('#eBname').value.trim();m.b.seed=$('#eBseed').value.trim()}
   m.date=$('#eDate').value;m.time=$('#eTime').value;m.notes=$('#eNotes').value;
   if(!auto){
-    const st=$('#eStatus').value;m.status=st;
-    m.sa=st==='wo'?'':$('#eAscore').value;m.sb=st==='wo'?'':$('#eBscore').value;
-    setWin(m,$('#eWin').value);normalize(m);
-    if(st==='wo'&&!m.win)toast('Walkover saved — open the match again to choose who advances');
+    const st=$('#eStatus').value,c=$('#eWin').value;
+    m.status=st;m.sa=num($('#eAscore').value);m.sb=num($('#eBscore').value);
+    if(c)applyResult(m,c);else setWin(m,'');
+    if(st==='wo'&&!c)toast('Walkover saved. Pick who advances.');
   }
   dlg.close();save();renderAll();
 };
@@ -458,11 +493,10 @@ function renderTable(){
     const nm=t=>t?(t.void?'BYE':esc(t.name)):'';
     const nameCell=(sl,t,f)=>sl.from?`<td class="der">${t?nm(t):'Winner of #'+sl.from}</td>`:`<td><input data-id="${m.id}" data-f="${f}" value="${esc(sl.name)}"></td>`;
     const lock=st==='bye'||m.status==='wo';
-    const scoreCell=(f,v,d)=>lock?`<td class="der">${esc(d)}</td>`:`<td><input class="s" type="number" data-id="${m.id}" data-f="${f}" value="${esc(v)}"></td>`;
+    const scoreCell=(f,v,d)=>lock?`<td class="der">${esc(d)}</td>`:`<td><input class="s" data-id="${m.id}" data-f="${f}" value="${esc(v)}" placeholder="or DQ"></td>`;
     const opts=Object.entries(STATUS).map(([k,v])=>`<option value="${k}" ${m.status===k?'selected':''}>${v}</option>`).join('');
-    const wn=`<option value="">—</option>${ok(A)?`<option value="A" ${m.win==='A'?'selected':''}>${esc(A.name)}</option>`:''}${ok(B)?`<option value="B" ${m.win==='B'?'selected':''}>${esc(B.name)}</option>`:''}${m.status==='wo'?`<option value="X" ${m.win==='X'?'selected':''}>None (both DQ)</option>`:''}`;
     const statusCell=st==='bye'?'<td class="der">Bye (auto)</td>':`<td><select data-id="${m.id}" data-f="status">${opts}</select></td>`;
-    const winCell=st==='bye'?`<td class="der">${e.w==='A'?nm(A):e.w==='B'?nm(B):'—'}</td>`:`<td><select data-id="${m.id}" data-f="win">${wn}</select></td>`;
+    const winCell=st==='bye'?`<td class="der">${e.w==='A'?nm(A):e.w==='B'?nm(B):'—'}</td>`:`<td><select data-id="${m.id}" data-f="win">${winnerOptions(m,resultCode(m))}</select></td>`;
     return`<tr class="st-${st}"><td>${m.id}</td><td>${ROUND_NAMES[m.round]}</td>${nameCell(m.a,A,'an')}
       ${scoreCell('sa',m.sa,da)}${scoreCell('sb',m.sb,db)}
       ${nameCell(m.b,B,'bn')}${winCell}
@@ -475,13 +509,17 @@ function renderTable(){
 $('#tb').addEventListener('change',e=>{
   const t=e.target,f=t.dataset.f;if(!f)return;const m=byId(+t.dataset.id),v=t.value;
   if(f==='an')m.a.name=v.trim();else if(f==='bn')m.b.name=v.trim();
-  else if(f==='sa'||f==='sb'){m[f]=v;autoScores(m);normalize(m)}
-  else if(f==='win'){setWin(m,v);normalize(m)}
+  else if(f==='sa'||f==='sb'){
+    m[f]=v;const tk=scoreToken(m.sa,m.sb);
+    if(tk)applyResult(m,tk);                       // DQ / W/O typed -> walkover automatically
+    else{m.sa=num(m.sa);m.sb=num(m.sb);autoScores(m)}
+  }
+  else if(f==='win')applyResult(m,v);              // winner picked -> Completed (or Walkover)
   else if(f==='status'){
-    m.status=v;if(v==='wo'){m.sa='';m.sb=''}
-    if(v==='completed'&&!m.win)autoScores(m);
-    normalize(m);
-    if(v==='wo'&&!m.win){save();renderTable();renderStats();toast('Walkover — choose who advances (or None if both are DQ)');openEdit(m.id);return}
+    m.status=v;
+    if(['scheduled','live','postponed'].includes(v))setWin(m,'');
+    else if(v==='completed'){if(m.win==='X')setWin(m,'');autoScores(m)}
+    else if(v==='wo'){m.sa='';m.sb='';if(!m.win)toast('Walkover: pick who advances in the Result column')}
   }else m[f]=v;
   save();renderTable();renderStats();
 });
@@ -622,7 +660,10 @@ async function pull(manual){
     setSync('ok');
     if(changed.length)toast(`Sheet updated · ${changed.length} match${changed.length>1?'es':''} changed`);
     else if(manual)toast('Already up to date');
-    if(sigRows(toRows())!==lastSig)push(false);   // refresh the Bracket tab + normalise the Matches tab
+    // push back only when the Sheet differs from our normalised data (or the Bracket tab was edited)
+    const mine=toRows(),keys=Object.keys(mine[0]);
+    lastSig=sigRows(j.rows.slice().sort((a,b)=>a.match_no-b.match_no).map(r=>{const o={};keys.forEach(k=>o[k]=s(r[k]));return o}));
+    if(j.source==='bracket'||sigRows(mine)!==lastSig)push(false);
     return true;
   }catch(e){fail(e);return null}
 }
